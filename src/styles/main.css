@@ -1,0 +1,14 @@
+.history {
+    -fx-padding:10px;
+    -fx-spacing:20px;
+    -fx-background-color: #eeeeee;
+}
+
+.history__item {
+    -fx-font-size:20px;
+    -fx-font-fill:#222222;
+    -fx-padding:10px;
+    -fx-background-color: #ffffff;
+    -fx-background-radius:5px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 5, 0, 0, 3);
+}

@@ -1,0 +1,19 @@
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
+
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.ScrollPane?>
+<VBox xmlns:fx="http://javafx.com/fxml" fx:id="root">
+    <ToolBar fx:id="toolbar"></ToolBar>
+    <HBox fx:id="content">
+        <StackPane fx:id="board">
+            <GridPane fx:id="checkers"></GridPane>
+            <GridPane fx:id="pieces"></GridPane>
+        </StackPane>
+        <ScrollPane fx:id="historyScroll">
+            <VBox fx:id="history"></VBox>
+        </ScrollPane>
+    </HBox>
+</VBox>
