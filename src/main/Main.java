@@ -19,7 +19,7 @@ public class Main extends Application {
         primaryStage.setScene(new Scene(root, 1000, 800));
         primaryStage.show();
 
-        StateManager stateManager = new StateManager();
+        StateManager stateManager = new StateManager(StateManager.createInitialState());
         Controller controller = new Controller(gui, stateManager);
         controller.setup();
     }

@@ -1,6 +1,5 @@
 package main;
 
-import javafx.event.EventHandler;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
@@ -17,10 +16,11 @@ public class Controller {
 
     public void setup() {
         this._gui.setup(this);
+        this._gui.render(this._stateManager.getState(), this._stateManager.getSuccessors(), this);
     }
 
     public void onPieceClick(MouseEvent event, String historyMessage) {
-        HBox item = this._gui.newHistoryItem(0, historyMessage);
+        HBox item = this._gui.createHistoryItem(0, historyMessage);
         this._gui.history.getChildren().add(item);
         item.toBack();
 

@@ -19,6 +19,6 @@
 
 .pieces Circle {
     -fx-stroke-width: 2;
-    -fx-stroke: red;
+    //-fx-stroke: red;
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 5, 0, 0, 3);
 }
