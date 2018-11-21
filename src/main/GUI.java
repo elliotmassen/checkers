@@ -13,6 +13,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 
@@ -20,7 +21,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 
-public class MainController implements Initializable {
+public class GUI {
     @FXML
     public ToolBar toolbar;
 
@@ -36,14 +37,13 @@ public class MainController implements Initializable {
     @FXML
     public VBox history;
 
-    @Override
-    public void initialize(URL url, ResourceBundle resources) {
+    public void setup(Controller controller) {
         HBox.setHgrow(this.historyScroll, Priority.ALWAYS);
         this.historyScroll.setFitToWidth(true);
         this.historyScroll.setFitToHeight(true);
         this.historyScroll.setMaxHeight(696);
         this.history.getStyleClass().add("history");
-        this.history.getChildren().add(this._newHistoryItem(0, "Hello world!"));
+        this.history.getChildren().add(this.newHistoryItem(0, "Hello world!"));
 
         // Add items to toolbar
         this.toolbar.getItems().addAll(new ArrayList<Node>() {{
@@ -54,6 +54,10 @@ public class MainController implements Initializable {
         }});
 
         // Add checkers and pieces
+        this.pieces.getStyleClass().add("pieces");
+        this.pieces.setHgap(17);
+        this.pieces.setVgap(17);
+
         for(int i = 0; i < 8; i++) {
             for(int j = 0; j < 8; j++) {
                 // Add checker
@@ -73,18 +77,16 @@ public class MainController implements Initializable {
                 this.checkers.getChildren().add(square);
 
                 // Add piece buttons
-                Rectangle pieceButton = new Rectangle();
-                pieceButton.setWidth(87);
-                pieceButton.setHeight(87);
+                Circle pieceButton = new Circle();
+                pieceButton.setRadius(34);
                 pieceButton.setFill(Color.TRANSPARENT);
+                pieceButton.setId(i + "" + j);
                 GridPane.setRowIndex(pieceButton, i);
                 GridPane.setColumnIndex(pieceButton, j);
 
                 final String coord = "[" + i + ", " + j + "]";
                 pieceButton.setOnMouseClicked((event -> {
-                    HBox item = this._newHistoryItem(0, coord);
-                    this.history.getChildren().add(item);
-                    item.toBack();
+                    controller.onPieceClick(event, coord);
                 }));
 
                 this.pieces.getChildren().add(pieceButton);
@@ -95,7 +97,7 @@ public class MainController implements Initializable {
         }
     }
 
-    private HBox _newHistoryItem(int playerId, String text) {
+    public HBox newHistoryItem(int playerId, String text) {
         HBox item = new HBox();
         item.getStyleClass().add("history__item");
         item.getChildren().add(new Text(text));

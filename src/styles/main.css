@@ -12,3 +12,13 @@
     -fx-background-radius:5px;
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 5, 0, 0, 3);
 }
+
+.pieces {
+    -fx-padding:8.5px;
+}
+
+.pieces Circle {
+    -fx-stroke-width: 2;
+    -fx-stroke: red;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 5, 0, 0, 3);
+}

@@ -10,19 +10,22 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("../fxml/main.fxml"));
-        MainController main = new MainController();
-        loader.setController(main);
+        GUI gui = new GUI();
+        loader.setController(gui);
         Parent root = loader.load();
-        System.out.println(getClass().getResource("../styles/main.css").toString());
         root.getStylesheets().add(getClass().getResource("../styles/main.css").toString());
 
         primaryStage.setTitle("Checkers");
         primaryStage.setScene(new Scene(root, 1000, 800));
         primaryStage.show();
+
+        StateManager stateManager = new StateManager();
+        Controller controller = new Controller(gui, stateManager);
+        controller.setup();
     }
 
 
     public static void main(String[] args) {
-        launch(args);
+        Application.launch(args);
     }
 }
