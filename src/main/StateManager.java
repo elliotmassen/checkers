@@ -17,8 +17,8 @@ public class StateManager {
         this._state = newState;
     }
 
-    public ArrayList<ArrayList<PieceState>> getSuccessors() {
-        return new ArrayList<ArrayList<PieceState>>();
+    public ArrayList<Move> getSuccessors() {
+        return new ArrayList<Move>();
     }
 
     public boolean isGoalState() {

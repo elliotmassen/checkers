@@ -19,6 +19,9 @@
 
 .pieces Circle {
     -fx-stroke-width: 2;
-    //-fx-stroke: red;
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 5, 0, 0, 3);
+}
+
+.pieces .option {
+    -fx-stroke: rgba(255, 255, 255, 0.5);
 }

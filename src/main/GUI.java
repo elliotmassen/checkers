@@ -29,13 +29,13 @@ public class GUI {
     @FXML
     public VBox history;
 
-    public void setup(Controller controller) {
+    public void setup() {
         HBox.setHgrow(this.historyScroll, Priority.ALWAYS);
         this.historyScroll.setFitToWidth(true);
         this.historyScroll.setFitToHeight(true);
         this.historyScroll.setMaxHeight(696);
         this.history.getStyleClass().add("history");
-        this.history.getChildren().add(this.createHistoryItem(0, "Hello world!"));
+        this.history.getChildren().add(this.createHistoryItem(Controller.Type.INFO, "Hello world!"));
 
         // Add items to toolbar
         this.toolbar.getItems().addAll(new ArrayList<Node>() {{
@@ -84,7 +84,7 @@ public class GUI {
         }
     }
 
-    public void render(ArrayList<PieceState> state, ArrayList<ArrayList<PieceState>> successors, Controller controller) {
+    public void render(ArrayList<PieceState> state, ArrayList<Move> successors, Controller controller) {
         for(PieceState s: state) {
             if(s.isActive()) {
                 // Add piece button
@@ -99,6 +99,31 @@ public class GUI {
 
                 Circle pieceButton = this.createPieceButton(s.getX(), s.getY(), colour, controller);
                 this.pieces.getChildren().add(pieceButton);
+            }
+        }
+
+        ArrayList<PieceState> nextMove;
+        for(Move m: successors) {
+            nextMove = m.getNext();
+            for(int i = 0; i < state.size(); i++) {
+                // If the piece has moved, add option
+                if(!state.get(i).equals(nextMove.get(i))) {
+                    String message = PieceState.changesToString(m.getCurrent(), m.getFinalState());
+                    Circle optionButton = this.createOptionButton(nextMove.get(i).getX(), nextMove.get(i).getY(), message, controller);
+                    this.pieces.getChildren().add(optionButton);
+                }
+            }
+
+            for(Move following: m.getAllMoves()) {
+                nextMove = following.getNext();
+                for(int i = 0; i < state.size(); i++) {
+                    // If the piece has moved, add option
+                    if(!state.get(i).equals(nextMove.get(i))) {
+                        String message = PieceState.changesToString(m.getCurrent(), m.getFinalState());
+                        Circle optionButton = this.createOptionButton(nextMove.get(i).getX(), nextMove.get(i).getY(), message, controller);
+                        this.pieces.getChildren().add(optionButton);
+                    }
+                }
             }
         }
     }
@@ -119,7 +144,22 @@ public class GUI {
         return pieceButton;
     }
 
-    public HBox createHistoryItem(int playerId, String text) {
+    public Circle createOptionButton(int x, int y, String message, Controller controller) {
+        Circle pieceButton = new Circle();
+        pieceButton.setRadius(34);
+        pieceButton.setFill(Color.TRANSPARENT);
+        pieceButton.getStyleClass().add("option");
+        GridPane.setRowIndex(pieceButton, x);
+        GridPane.setColumnIndex(pieceButton, y);
+
+        pieceButton.setOnMouseClicked((event -> {
+            controller.onPieceClick(event, message);
+        }));
+
+        return pieceButton;
+    }
+
+    public HBox createHistoryItem(Controller.Type type, String text) {
         HBox item = new HBox();
         item.getStyleClass().add("history__item");
         item.getChildren().add(new Text(text));
