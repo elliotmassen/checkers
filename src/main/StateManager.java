@@ -66,40 +66,44 @@ public class StateManager {
                 int x = p.getX();
                 int y = p.getY();
 
-                // Left
-                if (x - 1 >= 0) {
-                    // Top
-                    if (y - 1 >= 0) {
-                        // Top left is empty
-                        if (grid[x - 1][y - 1] == 0) {
-                            moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 1, y - 1, p.isKing())), null));
+                // Top
+                if (turn || p.isKing()) {
+                    if (x - 1 >= 0) {
+                        // Left
+                        if (y - 1 >= 0) {
+                            // Top left is empty
+                            if (grid[x - 1][y - 1] == 0) {
+                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 1, y - 1, p.isKing())), null));
+                            }
                         }
-                    }
 
-                    // Bottom
-                    if (y + 1 < 8) {
-                        // Bottom left is empty
-                        if (grid[x - 1][y + 1] == 0) {
-                            moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 1, y + 1, p.isKing())), null));
+                        // Right
+                        if (y + 1 < 8) {
+                            // Bottom left is empty
+                            if (grid[x - 1][y + 1] == 0) {
+                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 1, y + 1, p.isKing())), null));
+                            }
                         }
                     }
                 }
 
-                // Right
-                if (x + 1 < 8) {
-                    // Top
-                    if (y - 1 >= 0) {
-                        // Top right is empty
-                        if (grid[x + 1][y - 1] == 0) {
-                            moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 1, y - 1, p.isKing())), null));
+                // Bottom
+                if(!turn || p.isKing()) {
+                    if (x + 1 < 8) {
+                        // Left
+                        if (y - 1 >= 0) {
+                            // Top right is empty
+                            if (grid[x + 1][y - 1] == 0) {
+                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 1, y - 1, p.isKing())), null));
+                            }
                         }
-                    }
 
-                    // Bottom
-                    if (y + 1 < 8) {
-                        // Bottom right is empty
-                        if (grid[x + 1][y + 1] == 0) {
-                            moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 1, y + 1, p.isKing())), null));
+                        // Right
+                        if (y + 1 < 8) {
+                            // Bottom right is empty
+                            if (grid[x + 1][y + 1] == 0) {
+                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 1, y + 1, p.isKing())), null));
+                            }
                         }
                     }
                 }

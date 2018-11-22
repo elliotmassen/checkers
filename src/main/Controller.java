@@ -57,7 +57,6 @@ public class Controller {
     }
 
     public void onPieceClick(MouseEvent event, int x, int y, ArrayList<Circle> options) {
-        Scene scene = this._gui.pieces.getScene();
         options.forEach((Circle c) -> { c.getStyleClass().remove("option--visible"); });
 
         // TODO: Is there a nice filter function available for this?
