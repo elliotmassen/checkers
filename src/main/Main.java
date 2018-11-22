@@ -16,7 +16,7 @@ public class Main extends Application {
         root.getStylesheets().add(getClass().getResource("../styles/main.css").toString());
 
         primaryStage.setTitle("Checkers");
-        primaryStage.setScene(new Scene(root, 1000, 800));
+        primaryStage.setScene(new Scene(root, 1080, 735));
         primaryStage.show();
 
         StateManager stateManager = new StateManager(StateManager.createInitialState());

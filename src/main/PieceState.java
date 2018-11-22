@@ -35,23 +35,38 @@ public class PieceState {
                 && this.getY() == compare.getY();
     }
 
+    public static PieceState identifyChangedPiece(ArrayList<PieceState> current, ArrayList<PieceState> next) {
+        PieceState changed = null;
+        int i = 0;
+
+        // If changed is not longer null it means we found the changed piece
+        while(i < current.size() && changed == null) {
+            // We don't care about inactive pieces, we only want an active piece in new position
+            if(current.get(i).isActive() && next.get(i).isActive() && !current.get(i).equals(next.get(i))) {
+                changed = current.get(i);
+            }
+            i++;
+        }
+
+        return changed;
+    }
+
     public static String changesToString(ArrayList<PieceState> current, ArrayList<PieceState> next) {
         String changes = "";
 
-        for(int i = 0; i < current.size(); i++) {
-            if(!current.get(i).equals(next.get(i))) {
-                int xChange = current.get(i).getX() - next.get(i).getX();
-                int yChange = current.get(i).getY() - next.get(i).getY();
+        PieceState movedPieceCurrent = PieceState.identifyChangedPiece(current, next);
+        int index = current.indexOf(movedPieceCurrent);
+        PieceState movedPieceNext = next.get(index);
 
-                String verb = "moves";
-                if(Math.abs(xChange) > 1 || Math.abs(yChange) > 1) {
-                    verb = "jumps";
-                }
+        int xChange = movedPieceCurrent.getX() - movedPieceNext.getX();
+        int yChange = movedPieceCurrent.getY() - movedPieceNext.getY();
 
-                changes = verb + " from [" + current.get(i).getX() + ", " + current.get(i).getY() + "] to [" + next.get(i).getX() + ", " + next.get(i).getY() + "]";
-                break;
-            }
+        String verb = "moves";
+        if(Math.abs(xChange) > 1 || Math.abs(yChange) > 1) {
+            verb = "jumps";
         }
+
+        changes = verb + " from [" + movedPieceCurrent.getX() + ", " + movedPieceCurrent.getY() + "] to [" + movedPieceNext.getX() + ", " + movedPieceNext.getY() + "]";
 
         return changes;
     }

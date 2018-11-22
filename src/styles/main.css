@@ -8,6 +8,7 @@
     -fx-font-size:20px;
     -fx-font-fill:#222222;
     -fx-padding:10px;
+    -fx-spacing:5px;
     -fx-background-color: #ffffff;
     -fx-background-radius:5px;
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 5, 0, 0, 3);
@@ -23,5 +24,16 @@
 }
 
 .pieces .option {
+    visibility: hidden;
     -fx-stroke: rgba(255, 255, 255, 0.5);
+}
+
+.pieces .option--visible {
+    visibility: visible;
+    -fx-cursor: hand;
+}
+
+.pieces .origin {
+    -fx-stroke: rgba(255, 255, 255, 0.9);
+    -fx-cursor: hand;
 }
