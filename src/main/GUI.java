@@ -126,6 +126,7 @@ public class GUI {
             for(int i = 0; i < state.size(); i++) {
                 // If the piece has moved (but not destroyed), add options
                 if(!state.get(i).equals(nextMove.get(i)) && state.get(i).isActive() && nextMove.get(i).isActive()) {
+                    // TODO: Is it no only one piece that will change in each move? Is the enclosing for loop neccessary?
                     changed = PieceState.identifyChangedPiece(m.getCurrent(), m.getFinalState());
                     Scene scene = this.pieces.getScene();
                     Circle changedPieceCircle = (Circle) scene.lookup("#" + changed.getX() + changed.getY());
@@ -138,7 +139,7 @@ public class GUI {
                 }
             }
 
-            // If the potential move is a jump (and therefore has following moves), add the options for those too
+            // If the potential move is a jump (and therefore has potential following moves), add the options for those too
             for(Move following: m.getAllMoves()) {
                 nextMove = following.getNext();
                 for(int i = 0; i < state.size(); i++) {
