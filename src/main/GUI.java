@@ -46,6 +46,7 @@ public class GUI {
         this.toolbar.getItems().addAll(new ArrayList<Node>() {{
             add(new Button("New game"));
             add(new Button("Undo"));
+            add(new Button("Difficulty"));
             add(new Button("Show hints"));
             add(new Button("Rules"));
         }});
