@@ -1,6 +1,5 @@
 package main;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -13,6 +12,20 @@ public class StateManager {
 
     public ArrayList<PieceState> getState() {
         return this._state;
+    }
+
+    // TODO: The fact this function needs to exist may mean my state representation isn't efficient.
+    public PieceState getPieceByLocation(int x, int y) {
+        PieceState found = null;
+
+        for(PieceState p: this.getState()) {
+            if(p.getX() == x && p.getY() == y) {
+                found = p;
+                break;
+            }
+        }
+
+        return found;
     }
 
     public void setState(ArrayList<PieceState> newState) {
@@ -193,6 +206,7 @@ public class StateManager {
             enemies.add(4);
         }
 
+        // TODO: This can be abstracted.
         // Top
         if (turn || p.isKing()) {
             // Empty adjacent tile
@@ -202,13 +216,18 @@ public class StateManager {
                     // Top left is empty and there is an enemy in between
                     if (grid[x - 2][y - 2] == 0 && enemies.contains(grid[x - 1][y - 1])) {
                         ArrayList<Move> followingJumps = this._detectJumps(grid, p, turn, x-2, y-2);
+
+                        ArrayList<PieceState> nextState = StateManager.createNewState(this.getState(), p, new PieceState(x - 2, y - 2, p.isKing()));
+                        PieceState jumpedOver = this.getPieceByLocation(x-1, y-1);
+                        nextState = StateManager.createNewState(nextState, jumpedOver, new PieceState(-1, -1, jumpedOver.isKing()));
+
                         if(followingJumps.size() < 1) {
-                            moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 2, y - 2, p.isKing())), null));
+                            moves.add(new Move(this.getState(), nextState, null));
                         }
                         else {
-                            followingJumps.forEach((Move m) -> {
-                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 2, y - 2, p.isKing())), m));
-                            });
+                            for(Move m: followingJumps) {
+                                moves.add(new Move(this.getState(), nextState, m));
+                            }
                         }
                     }
                 }
@@ -218,13 +237,18 @@ public class StateManager {
                     // Bottom left is empty and there is an enemy in between
                     if (grid[x - 2][y + 2] == 0 && enemies.contains(grid[x - 1][y + 1])) {
                         ArrayList<Move> followingJumps = this._detectJumps(grid, p, turn, x-2, y+2);
+
+                        ArrayList<PieceState> nextState = StateManager.createNewState(this.getState(), p, new PieceState(x - 2, y + 2, p.isKing()));
+                        PieceState jumpedOver = this.getPieceByLocation(x-1, y+1);
+                        nextState = StateManager.createNewState(nextState, jumpedOver, new PieceState(-1, -1, jumpedOver.isKing()));
+
                         if(followingJumps.size() < 1) {
-                            moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 2, y + 2, p.isKing())), null));
+                            moves.add(new Move(this.getState(), nextState, null));
                         }
                         else {
-                            followingJumps.forEach((Move m) -> {
-                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 2, y + 2, p.isKing())), m));
-                            });
+                            for(Move m: followingJumps) {
+                                moves.add(new Move(this.getState(), nextState, m));
+                            }
                         }
                     }
                 }
@@ -239,13 +263,18 @@ public class StateManager {
                     // Top right is empty and there is an enemy in between
                     if (grid[x + 2][y - 2] == 0 && enemies.contains(grid[x + 1][y - 1])) {
                         ArrayList<Move> followingJumps = this._detectJumps(grid, p, turn, x+2, y-2);
+
+                        ArrayList<PieceState> nextState = StateManager.createNewState(this.getState(), p, new PieceState(x + 2, y - 2, p.isKing()));
+                        PieceState jumpedOver = this.getPieceByLocation(x+1, y-1);
+                        nextState = StateManager.createNewState(nextState, jumpedOver, new PieceState(-1, -1, jumpedOver.isKing()));
+
                         if(followingJumps.size() < 1) {
-                            moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 2, y - 2, p.isKing())), null));
+                            moves.add(new Move(this.getState(), nextState, null));
                         }
                         else {
-                            followingJumps.forEach((Move m) -> {
-                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 2, y - 2, p.isKing())), m));
-                            });
+                            for(Move m: followingJumps) {
+                                moves.add(new Move(this.getState(), nextState, m));
+                            }
                         }
                     }
                 }
@@ -255,13 +284,18 @@ public class StateManager {
                     // Bottom right is empty and there is an enemy in between
                     if (grid[x + 2][y + 2] == 0 && enemies.contains(grid[x + 1][y + 1])) {
                         ArrayList<Move> followingJumps = this._detectJumps(grid, p, turn, x+2, y+2);
+
+                        ArrayList<PieceState> nextState = StateManager.createNewState(this.getState(), p, new PieceState(x + 2, y + 2, p.isKing()));
+                        PieceState jumpedOver = this.getPieceByLocation(x+1, y+1);
+                        nextState = StateManager.createNewState(nextState, jumpedOver, new PieceState(-1, -1, jumpedOver.isKing()));
+
                         if(followingJumps.size() < 1) {
-                            moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 2, y + 2, p.isKing())), null));
+                            moves.add(new Move(this.getState(), nextState, null));
                         }
                         else {
-                            followingJumps.forEach((Move m) -> {
-                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 2, y + 2, p.isKing())), m));
-                            });
+                            for(Move m: followingJumps) {
+                                moves.add(new Move(this.getState(), nextState, m));
+                            }
                         }
                     }
                 }

@@ -1,9 +1,7 @@
 package main;
 
-import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
 import java.util.ArrayList;
@@ -37,10 +35,20 @@ public class Controller {
 
     public void setup() {
         this._gui.setup();
+        this.updateGUI();
+    }
+
+    public void updateState(ArrayList<PieceState> newState) {
+        this._stateManager.setState(newState);
+        this.endTurn();
+        this.updateGUI();
+    }
+
+    public void updateGUI() {
         this._gui.render(this._stateManager.getState(), this._stateManager.getSuccessors(this.getTurn()), this);
     }
 
-    public void onOptionClick(MouseEvent event, String message) {
+    public void onOptionClick(MouseEvent event, String message, ArrayList<PieceState> newState) {
         Type type;
         if(this.getTurn()) {
             type = Type.BLACK;
@@ -53,7 +61,7 @@ public class Controller {
         this._gui.history.getChildren().add(item);
         item.toBack();
 
-        ((Circle) event.getTarget()).setFill(Color.rgb(255, 255, 255));
+        this.updateState(newState);
     }
 
     public void onPieceClick(MouseEvent event, int x, int y, ArrayList<Circle> options) {

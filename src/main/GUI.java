@@ -34,7 +34,13 @@ public class GUI {
     private ArrayList<Circle> _pieces;
     private ArrayList<Circle> _options;
 
+    public void resetPieces() {
+        this.pieces.getChildren().clear();
+    }
+
     public void setup() {
+        this.resetPieces();
+
         HBox.setHgrow(this.historyScroll, Priority.ALWAYS);
         this.historyScroll.setFitToWidth(true);
         this.historyScroll.setFitToHeight(true);
@@ -91,6 +97,7 @@ public class GUI {
     }
 
     public void render(ArrayList<PieceState> state, ArrayList<Move> successors, Controller controller) {
+        this.resetPieces();
         this._pieces = new ArrayList<Circle>();
         this._options = new ArrayList<Circle>();
 
@@ -117,16 +124,15 @@ public class GUI {
             PieceState changed = null;
             ArrayList<PieceState> nextMove = m.getNext();
             for(int i = 0; i < state.size(); i++) {
-                // If the piece has moved, add options
-                if(!state.get(i).equals(nextMove.get(i))) {
-                    System.out.println("[" + state.get(i).getX() + ", " + state.get(i).getY() + "] -> [" + nextMove.get(i).getX() + ", " + nextMove.get(i).getY() + "]");
+                // If the piece has moved (but not destroyed), add options
+                if(!state.get(i).equals(nextMove.get(i)) && state.get(i).isActive() && nextMove.get(i).isActive()) {
                     changed = PieceState.identifyChangedPiece(m.getCurrent(), m.getFinalState());
                     Scene scene = this.pieces.getScene();
                     Circle changedPieceCircle = (Circle) scene.lookup("#" + changed.getX() + changed.getY());
                     changedPieceCircle.getStyleClass().add("origin");
 
                     String message = PieceState.changesToString(m.getCurrent(), m.getFinalState());
-                    Circle optionButton = this.createOptionButton(nextMove.get(i).getX(), nextMove.get(i).getY(), message, "" + changed.getX() + changed.getY(), controller);
+                    Circle optionButton = this.createOptionButton(nextMove.get(i).getX(), nextMove.get(i).getY(), message, "" + changed.getX() + changed.getY(), m.getFinalState(), controller);
                     this.pieces.getChildren().add(optionButton);
                     this._options.add(optionButton);
                 }
@@ -136,10 +142,10 @@ public class GUI {
             for(Move following: m.getAllMoves()) {
                 nextMove = following.getNext();
                 for(int i = 0; i < state.size(); i++) {
-                    // If the piece has moved, add option
-                    if(!state.get(i).equals(nextMove.get(i))) {
+                    // If the piece has moved (but not destroyed), add options
+                    if(!state.get(i).equals(nextMove.get(i)) && state.get(i).isActive() && nextMove.get(i).isActive()) {
                         String message = PieceState.changesToString(m.getCurrent(), m.getFinalState());
-                        Circle optionButton = this.createOptionButton(nextMove.get(i).getX(), nextMove.get(i).getY(), message, "" + changed.getX() + changed.getY(), controller);
+                        Circle optionButton = this.createOptionButton(nextMove.get(i).getX(), nextMove.get(i).getY(), message, "" + changed.getX() + changed.getY(), m.getFinalState(), controller);
                         this.pieces.getChildren().add(optionButton);
                         this._options.add(optionButton);
                     }
@@ -163,7 +169,7 @@ public class GUI {
         return pieceButton;
     }
 
-    public Circle createOptionButton(int x, int y, String message, String owner, Controller controller) {
+    public Circle createOptionButton(int x, int y, String message, String owner, ArrayList<PieceState> newState, Controller controller) {
         Circle pieceButton = new Circle();
         pieceButton.setRadius(34);
         pieceButton.setFill(Color.TRANSPARENT);
@@ -173,7 +179,7 @@ public class GUI {
         GridPane.setColumnIndex(pieceButton, y);
 
         pieceButton.setOnMouseClicked((event -> {
-            controller.onOptionClick(event, message);
+            controller.onOptionClick(event, message, newState);
         }));
 
         return pieceButton;
