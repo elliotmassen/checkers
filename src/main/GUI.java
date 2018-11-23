@@ -14,6 +14,9 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 public class GUI {
     @FXML
@@ -120,37 +123,63 @@ public class GUI {
         }
 
         // For each potential move, find the piece that has moved.
-        for(Move m: successors) {
-            PieceState changed = null;
-            ArrayList<PieceState> nextMove = m.getNext();
-            for(int i = 0; i < state.size(); i++) {
-                // If the piece has moved (but not destroyed), add options
-                if(!state.get(i).equals(nextMove.get(i)) && state.get(i).isActive() && nextMove.get(i).isActive()) {
-                    // TODO: Is it no only one piece that will change in each move? Is the enclosing for loop neccessary?
-                    changed = PieceState.identifyChangedPiece(m.getCurrent(), m.getFinalState());
-                    Scene scene = this.pieces.getScene();
-                    Circle changedPieceCircle = (Circle) scene.lookup("#" + changed.getX() + changed.getY());
-                    changedPieceCircle.getStyleClass().add("origin");
 
-                    String message = PieceState.changesToString(m.getCurrent(), m.getFinalState());
-                    Circle optionButton = this.createOptionButton(nextMove.get(i).getX(), nextMove.get(i).getY(), message, "" + changed.getX() + changed.getY(), m.getFinalState(), controller);
-                    this.pieces.getChildren().add(optionButton);
-                    this._options.add(optionButton);
-                }
+        // Collect all moves, including multi-jump moves
+        ArrayList<Move> allMoves = new ArrayList<Move>();
+        for(Move m: successors) {
+            allMoves.add(m);
+            allMoves.addAll(m.getAllMoves());
+        }
+
+        // Group moves by the piece that changed
+        HashMap<PieceState, ArrayList<Move>> changedPieces = new HashMap<PieceState, ArrayList<Move>>();
+        for(Move m: allMoves) {
+            // PieceState changed = PieceState.identifyChangedPiece(m.getCurrent(), m.getFinalState());
+
+            System.out.println("MOVE");
+            System.out.println(PieceState.stateToString(m.getCurrent()));
+            System.out.println(PieceState.stateToString(m.getNext()));
+            System.out.println("");
+
+            PieceState[] changed = PieceState.identifyChangedPiece(m.getCurrent(), m.getNext());
+            System.out.println("[" + changed[0].getX() + ", " + changed[0].getY() + "]");
+            PieceState changedCurrent = changed[0];
+            changedPieces.computeIfAbsent(changedCurrent, k -> new ArrayList<Move>()).add(m);
+        }
+
+        for(Map.Entry<PieceState, ArrayList<Move>> entry: changedPieces.entrySet()) {
+            // If the first move is an origin, then the rest for that piece must also be
+            if(entry.getValue().get(0).isOrigin()) {
+                Scene scene = this.pieces.getScene();
+                Circle changedPieceCircle = (Circle) scene.lookup("#" + entry.getKey().getX() + entry.getKey().getY());
+                changedPieceCircle.getStyleClass().add("origin");
             }
 
-            // If the potential move is a jump (and therefore has potential following moves), add the options for those too
-            for(Move following: m.getAllMoves()) {
-                nextMove = following.getNext();
-                for(int i = 0; i < state.size(); i++) {
-                    // If the piece has moved (but not destroyed), add options
-                    if(!state.get(i).equals(nextMove.get(i)) && state.get(i).isActive() && nextMove.get(i).isActive()) {
-                        String message = PieceState.changesToString(m.getCurrent(), m.getFinalState());
-                        Circle optionButton = this.createOptionButton(nextMove.get(i).getX(), nextMove.get(i).getY(), message, "" + changed.getX() + changed.getY(), m.getFinalState(), controller);
-                        this.pieces.getChildren().add(optionButton);
-                        this._options.add(optionButton);
-                    }
-                }
+            // If there's only one move for the piece, it's more straightforward
+            if(entry.getValue().size() < 2) {
+                String message = PieceState.changesToString(entry.getValue().get(0).getCurrent(), entry.getValue().get(0).getFinalState());
+                PieceState[] changedTemp = PieceState.identifyChangedPiece(entry.getValue().get(0).getCurrent(), entry.getValue().get(0).getNext());
+                PieceState changedNext = changedTemp[1];
+                // TODO: The message here will print the same coords, not the original place of the piece?
+                Circle optionButton = this.createOptionButton(changedNext.getX(), changedNext.getY(), message, "" + entry.getKey().getX() + entry.getKey().getY(), entry.getValue().get(0).getFinalState(), controller);
+                this.pieces.getChildren().add(optionButton);
+                this._options.add(optionButton);
+            }
+            // If there's more than one move that moves through the piece we need to allow for intermediary shared states
+            // that exist between real states
+            else {
+                PieceState[] changedTemp = PieceState.identifyChangedPiece(entry.getValue().get(0).getCurrent(), entry.getValue().get(0).getNext());
+                PieceState changedNext = changedTemp[1];
+                PieceState[] original = PieceState.identifyChangedPiece(entry.getValue().get(0).getFirstState(), entry.getValue().get(0).getNext());
+
+                System.out.println("[" + entry.getKey().getX() + ", " + entry.getKey().getY() + "]");
+                System.out.println(changedNext);
+                System.out.println(original);
+                System.out.println(entry.getValue().size());
+
+                Circle optionButton = this.createSemiOptionButton(changedNext.getX(), changedNext.getY(), "" + original[0].getX() + original[0].getY(), entry.getValue().get(0).getNext(), entry.getValue(), controller);
+                this.pieces.getChildren().add(optionButton);
+                this._options.add(optionButton);
             }
         }
     }
@@ -181,6 +210,22 @@ public class GUI {
 
         pieceButton.setOnMouseClicked((event -> {
             controller.onOptionClick(event, message, newState);
+        }));
+
+        return pieceButton;
+    }
+
+    public Circle createSemiOptionButton(int x, int y, String owner, ArrayList<PieceState> newState, ArrayList<Move> restrictedMoves, Controller controller) {
+        Circle pieceButton = new Circle();
+        pieceButton.setRadius(34);
+        pieceButton.setFill(Color.TRANSPARENT);
+        pieceButton.getStyleClass().add("option");
+        pieceButton.getStyleClass().add(owner);
+        GridPane.setRowIndex(pieceButton, x);
+        GridPane.setColumnIndex(pieceButton, y);
+
+        pieceButton.setOnMouseClicked((event -> {
+            controller.onSemiOptionClick(event, newState, restrictedMoves);
         }));
 
         return pieceButton;

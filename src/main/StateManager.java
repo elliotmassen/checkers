@@ -89,7 +89,7 @@ public class StateManager {
                         if (y - 1 >= 0) {
                             // Top left is empty
                             if (grid[x - 1][y - 1] == 0) {
-                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 1, y - 1, p.isKing())), null));
+                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 1, y - 1, p.isKing())), null, null,true));
                             }
                         }
 
@@ -97,7 +97,7 @@ public class StateManager {
                         if (y + 1 < 8) {
                             // Bottom left is empty
                             if (grid[x - 1][y + 1] == 0) {
-                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 1, y + 1, p.isKing())), null));
+                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 1, y + 1, p.isKing())), null, null, true));
                             }
                         }
                     }
@@ -110,7 +110,7 @@ public class StateManager {
                         if (y - 1 >= 0) {
                             // Top right is empty
                             if (grid[x + 1][y - 1] == 0) {
-                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 1, y - 1, p.isKing())), null));
+                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 1, y - 1, p.isKing())), null, null, true));
                             }
                         }
 
@@ -118,13 +118,13 @@ public class StateManager {
                         if (y + 1 < 8) {
                             // Bottom right is empty
                             if (grid[x + 1][y + 1] == 0) {
-                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 1, y + 1, p.isKing())), null));
+                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 1, y + 1, p.isKing())), null, null, true));
                             }
                         }
                     }
                 }
 
-                jumps.addAll(this._detectJumps(grid, p, turn, x, y));
+                jumps.addAll(this._detectJumps(grid, p, turn, x, y, this.getState(),null));
             }
 
             index++;
@@ -143,6 +143,7 @@ public class StateManager {
     }
 
     public static ArrayList<PieceState> createInitialState() {
+        // TODO: Use for loops (and modulo) to reduce lines here.
         return new ArrayList<PieceState>() {{
             // Red pieces
 //            add(new PieceState(0, 1, false));
@@ -194,7 +195,7 @@ public class StateManager {
         return temp;
     }
 
-    private ArrayList<Move> _detectJumps(int[][] grid, PieceState p, boolean turn, int x, int y) {
+    private ArrayList<Move> _detectJumps(int[][] grid, PieceState p, boolean turn, int x, int y, ArrayList<PieceState> state, Move prevMove) {
         ArrayList<Move> moves = new ArrayList<Move>();
         HashSet<Integer> enemies = new HashSet<Integer>();
         if(turn) {
@@ -215,20 +216,14 @@ public class StateManager {
                 if (y - 2 >= 0) {
                     // Top left is empty and there is an enemy in between
                     if (grid[x - 2][y - 2] == 0 && enemies.contains(grid[x - 1][y - 1])) {
-                        ArrayList<Move> followingJumps = this._detectJumps(grid, p, turn, x-2, y-2);
-
-                        ArrayList<PieceState> nextState = StateManager.createNewState(this.getState(), p, new PieceState(x - 2, y - 2, p.isKing()));
+                        ArrayList<PieceState> nextState = StateManager.createNewState(state, p, new PieceState(x - 2, y - 2, p.isKing()));
                         PieceState jumpedOver = this.getPieceByLocation(x-1, y-1);
                         nextState = StateManager.createNewState(nextState, jumpedOver, new PieceState(-1, -1, jumpedOver.isKing()));
 
-                        if(followingJumps.size() < 1) {
-                            moves.add(new Move(this.getState(), nextState, null));
-                        }
-                        else {
-                            for(Move m: followingJumps) {
-                                moves.add(new Move(this.getState(), nextState, m));
-                            }
-                        }
+                        // Get following moves, and then format them to add their previous moves
+                        Move move = new Move(state, nextState, null, null, true);
+                        ArrayList<Move> followingJumps = this._detectJumps(grid, p, turn, x-2, y-2, nextState, move);
+                        moves.addAll(this._formatFollowingJumps(followingJumps, state, nextState, prevMove, move));
                     }
                 }
 
@@ -236,20 +231,14 @@ public class StateManager {
                 if (y + 2 < 8) {
                     // Bottom left is empty and there is an enemy in between
                     if (grid[x - 2][y + 2] == 0 && enemies.contains(grid[x - 1][y + 1])) {
-                        ArrayList<Move> followingJumps = this._detectJumps(grid, p, turn, x-2, y+2);
-
                         ArrayList<PieceState> nextState = StateManager.createNewState(this.getState(), p, new PieceState(x - 2, y + 2, p.isKing()));
                         PieceState jumpedOver = this.getPieceByLocation(x-1, y+1);
                         nextState = StateManager.createNewState(nextState, jumpedOver, new PieceState(-1, -1, jumpedOver.isKing()));
 
-                        if(followingJumps.size() < 1) {
-                            moves.add(new Move(this.getState(), nextState, null));
-                        }
-                        else {
-                            for(Move m: followingJumps) {
-                                moves.add(new Move(this.getState(), nextState, m));
-                            }
-                        }
+                        // Get following moves, and then format them to add their previous moves
+                        Move move = new Move(state, nextState, null, null, true);
+                        ArrayList<Move> followingJumps = this._detectJumps(grid, p, turn, x-2, y+2, nextState, move);
+                        moves.addAll(this._formatFollowingJumps(followingJumps, state, nextState, prevMove, move));
                     }
                 }
             }
@@ -262,20 +251,14 @@ public class StateManager {
                 if (y - 2 >= 0) {
                     // Top right is empty and there is an enemy in between
                     if (grid[x + 2][y - 2] == 0 && enemies.contains(grid[x + 1][y - 1])) {
-                        ArrayList<Move> followingJumps = this._detectJumps(grid, p, turn, x+2, y-2);
-
                         ArrayList<PieceState> nextState = StateManager.createNewState(this.getState(), p, new PieceState(x + 2, y - 2, p.isKing()));
                         PieceState jumpedOver = this.getPieceByLocation(x+1, y-1);
                         nextState = StateManager.createNewState(nextState, jumpedOver, new PieceState(-1, -1, jumpedOver.isKing()));
 
-                        if(followingJumps.size() < 1) {
-                            moves.add(new Move(this.getState(), nextState, null));
-                        }
-                        else {
-                            for(Move m: followingJumps) {
-                                moves.add(new Move(this.getState(), nextState, m));
-                            }
-                        }
+                        // Get following moves, and then format them to add their previous moves
+                        Move move = new Move(state, nextState, null, null, true);
+                        ArrayList<Move> followingJumps = this._detectJumps(grid, p, turn, x+2, y-2, nextState, move);
+                        moves.addAll(this._formatFollowingJumps(followingJumps, state, nextState, prevMove, move));
                     }
                 }
 
@@ -283,23 +266,40 @@ public class StateManager {
                 if (y + 2 < 8) {
                     // Bottom right is empty and there is an enemy in between
                     if (grid[x + 2][y + 2] == 0 && enemies.contains(grid[x + 1][y + 1])) {
-                        ArrayList<Move> followingJumps = this._detectJumps(grid, p, turn, x+2, y+2);
-
                         ArrayList<PieceState> nextState = StateManager.createNewState(this.getState(), p, new PieceState(x + 2, y + 2, p.isKing()));
                         PieceState jumpedOver = this.getPieceByLocation(x+1, y+1);
                         nextState = StateManager.createNewState(nextState, jumpedOver, new PieceState(-1, -1, jumpedOver.isKing()));
 
-                        if(followingJumps.size() < 1) {
-                            moves.add(new Move(this.getState(), nextState, null));
-                        }
-                        else {
-                            for(Move m: followingJumps) {
-                                moves.add(new Move(this.getState(), nextState, m));
-                            }
-                        }
+                        // Get following moves, and then format them to add their previous moves
+                        Move move = new Move(state, nextState, null, null, true);
+                        ArrayList<Move> followingJumps = this._detectJumps(grid, p, turn, x+2, y+2, nextState, move);
+                        moves.addAll(this._formatFollowingJumps(followingJumps, state, nextState, prevMove, move));
                     }
                 }
             }
+        }
+
+        return moves;
+    }
+
+    private ArrayList<Move> _formatFollowingJumps(ArrayList<Move> followingJumps, ArrayList<PieceState> state, ArrayList<PieceState> nextState, Move prevMove, Move move) {
+        ArrayList<Move> moves = new ArrayList<Move>();
+
+        if(followingJumps.size() < 1) {
+            moves.add(move);
+        }
+
+        for(Move m: followingJumps) {
+            Move following = new Move(m.getCurrent(), m.getNext(), prevMove, null, false);
+
+            Move updatedPrevMove = prevMove.clone();
+            updatedPrevMove.setFollowingMove(following);
+
+            Move updatedMove = move.clone();
+            updatedMove.setPreviousMove(updatedPrevMove);
+
+            moves.add(updatedPrevMove);
+            moves.add(updatedMove);
         }
 
         return moves;
