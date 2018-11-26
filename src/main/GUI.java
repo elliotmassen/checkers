@@ -33,14 +33,13 @@ public class GUI {
     @FXML
     public VBox history;
 
-    private ArrayList<StackPane> _pieces;
     private ArrayList<Circle> _options;
 
     public void resetPieces() {
         this.pieces.getChildren().clear();
     }
 
-    public void setup() {
+    public void setup(ArrayList<PieceState> state, Controller controller) {
         this.resetPieces();
 
         HBox.setHgrow(this.historyScroll, Priority.ALWAYS);
@@ -48,7 +47,7 @@ public class GUI {
         this.historyScroll.setFitToHeight(true);
         this.historyScroll.setMaxHeight(696);
         this.history.getStyleClass().add("history");
-        this.history.getChildren().add(this.createHistoryItem(Controller.Type.INFO, "Hello world!"));
+        this.history.getChildren().add(this.createHistoryItem(Controller.Type.INFO, "Game started!", state, controller));
 
         // Add items to toolbar
         this.toolbar.getItems().addAll(new ArrayList<Node>() {{
@@ -100,7 +99,6 @@ public class GUI {
 
     public void render(ArrayList<PieceState> state, ArrayList<Move> successors, Controller controller) {
         this.resetPieces();
-        this._pieces = new ArrayList<StackPane>();
         this._options = new ArrayList<Circle>();
 
         for(PieceState s: state) {
@@ -117,7 +115,6 @@ public class GUI {
 
                 StackPane pieceButton = this.createPieceButton(s.getX(), s.getY(), s.isKing(), colour, controller);
                 this.pieces.getChildren().add(pieceButton);
-                this._pieces.add(pieceButton);
             }
         }
 
@@ -142,7 +139,8 @@ public class GUI {
                 // Add origin class to original piece
                 changedPiecePane.getStyleClass().add("origin");
 
-                Circle optionButton = this.createOptionButton(piece.getX(), piece.getY(), PieceState.changesToString(move.getCurrent(), move.getNext()), "" + originalPieceState.getX() + originalPieceState.getY(), move.getNext(), controller);
+                String message = PieceState.changesToString(move.getFirstMove().getCurrent(), move.getNext());
+                Circle optionButton = this.createOptionButton(piece.getX(), piece.getY(), message, "" + originalPieceState.getX() + originalPieceState.getY(), state, move.getNext(), controller);
                 this.pieces.getChildren().add(optionButton);
                 this._options.add(optionButton);
             }
@@ -180,14 +178,14 @@ public class GUI {
         GridPane.setRowIndex(pieceStack, x);
         GridPane.setColumnIndex(pieceStack, y);
 
-        pieceButton.setOnMouseClicked((event -> {
+        pieceStack.setOnMouseClicked((event -> {
             controller.onPieceClick(event, x, y, this._options);
         }));
 
         return pieceStack;
     }
 
-    public Circle createOptionButton(int x, int y, String message, String owner, ArrayList<PieceState> newState, Controller controller) {
+    public Circle createOptionButton(int x, int y, String message, String owner, ArrayList<PieceState> state, ArrayList<PieceState> newState, Controller controller) {
         Circle pieceButton = new Circle();
         pieceButton.setRadius(34);
         pieceButton.setFill(Color.TRANSPARENT);
@@ -197,7 +195,7 @@ public class GUI {
         GridPane.setColumnIndex(pieceButton, y);
 
         pieceButton.setOnMouseClicked((event -> {
-            controller.onOptionClick(event, message, newState);
+            controller.onOptionClick(event, message, state, newState);
         }));
 
         return pieceButton;
@@ -212,14 +210,14 @@ public class GUI {
         GridPane.setRowIndex(pieceButton, x);
         GridPane.setColumnIndex(pieceButton, y);
 
-        pieceButton.setOnMouseClicked((event -> {
+        pieceButton.setOnMouseClicked(event -> {
             controller.onSemiOptionClick(event, newState, restrictedMoves);
-        }));
+        });
 
         return pieceButton;
     }
 
-    public HBox createHistoryItem(Controller.Type type, String text) {
+    public HBox createHistoryItem(Controller.Type type, String text, ArrayList<PieceState> state, Controller controller) {
         HBox item = new HBox();
         item.getStyleClass().add("history__item");
         item.setAlignment(Pos.CENTER_LEFT);
@@ -238,6 +236,21 @@ public class GUI {
         }
 
         item.getChildren().add(new Text(text));
+
+        if(type != Controller.Type.INFO) {
+            Pane rewindButton = new Pane();
+            rewindButton.setPrefWidth(30);
+            rewindButton.setPrefHeight(30);
+            rewindButton.getStyleClass().add("rewind");
+
+            rewindButton.setOnMouseClicked(event -> {
+                controller.onHistoryItemClick(event, state);
+            });
+
+            item.getChildren().add(rewindButton);
+            HBox.setHgrow(rewindButton, Priority.ALWAYS);
+        }
+
         return item;
     }
 

@@ -96,52 +96,6 @@ public class StateManager {
         int index = 0;
         for(PieceState p: this.getState()) {
             if(index < 12 != turn && p.isActive()) {
-//                int x = p.getX();
-//                int y = p.getY();
-//
-//                // Top
-//                if (turn || p.isKing()) {
-//                    // Empty adjacent tile
-//                    if (x - 1 >= 0) {
-//                        // Left
-//                        if (y - 1 >= 0) {
-//                            // Top left is empty
-//                            if (grid[x - 1][y - 1] == 0) {
-//                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 1, y - 1, p.isKing())), null));
-//                            }
-//                        }
-//
-//                        // Right
-//                        if (y + 1 < 8) {
-//                            // Bottom left is empty
-//                            if (grid[x - 1][y + 1] == 0) {
-//                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 1, y + 1, p.isKing())), null));
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                // Bottom
-//                if(!turn || p.isKing()) {
-//                    if (x + 1 < 8) {
-//                        // Left
-//                        if (y - 1 >= 0) {
-//                            // Top right is empty
-//                            if (grid[x + 1][y - 1] == 0) {
-//                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 1, y - 1, p.isKing())), null));
-//                            }
-//                        }
-//
-//                        // Right
-//                        if (y + 1 < 8) {
-//                            // Bottom right is empty
-//                            if (grid[x + 1][y + 1] == 0) {
-//                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 1, y + 1, p.isKing())), null));
-//                            }
-//                        }
-//                    }
-//                }
-
                 moves.addAll(this._detectMoves(this.getState(), turn, p, grid));
                 jumps.addAll(this._detectJumps(this.getState(), turn, p, null, null));
             }
@@ -158,8 +112,23 @@ public class StateManager {
         return moves;
     }
 
-    public boolean isGoalState() {
-        return false;
+    public boolean isGoalState(boolean turn, ArrayList<Move> successors) {
+        // The opponent has no active pieces
+        boolean opponentHasActivePieces = false;
+        int index = 0;
+        for(PieceState p: this.getState()) {
+            if(index < 12 == turn && p.isActive()) {
+                opponentHasActivePieces = true;
+                break;
+            }
+
+            index++;
+        }
+
+        // Or, the opponent has no moves they can make
+        int numberOfSuccessorStates = successors.size();
+
+        return !opponentHasActivePieces || numberOfSuccessorStates < 1;
     }
 
     public static ArrayList<PieceState> createInitialState() {

@@ -2,6 +2,7 @@ package main;
 
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.shape.Circle;
 
 import java.util.ArrayList;
@@ -13,9 +14,7 @@ public class Controller {
 
     public enum Type {
         RED,
-        RED_KING,
         BLACK,
-        BLACK_KING,
         INFO
     }
 
@@ -34,11 +33,12 @@ public class Controller {
     }
 
     public void setup() {
-        this._gui.setup();
+        this._gui.setup(this._stateManager.getState(), this);
         this.updateGUI(this._stateManager.getSuccessors(this.getTurn()));
     }
 
     public void updateState(ArrayList<PieceState> newState, boolean isTurnEnd, ArrayList<Move> successors) {
+        ArrayList<PieceState> previousState = this._stateManager.getState();
         this._stateManager.setState(newState);
 
         if (isTurnEnd) {
@@ -46,10 +46,24 @@ public class Controller {
         }
 
         if (successors == null) {
-            this.updateGUI(this._stateManager.getSuccessors(this.getTurn()));
-        } else {
-            this.updateGUI(successors);
+            successors = this._stateManager.getSuccessors(this.getTurn());
         }
+
+        if(this._stateManager.isGoalState(!this.getTurn(), successors)) {
+            Type type;
+            if(!this.getTurn()) {
+                type = Type.BLACK;
+            }
+            else {
+                type = Type.RED;
+            }
+
+            HBox gameoverItem = this._gui.createHistoryItem(type, "won the game!", previousState, this);
+            this._gui.history.getChildren().add(gameoverItem);
+            gameoverItem.toBack();
+        }
+
+        this.updateGUI(successors);
     }
 
     public void updateGUI(ArrayList<Move> successors) {
@@ -60,7 +74,7 @@ public class Controller {
         this.updateState(newState, false, restrictedMoves);
     }
 
-    public void onOptionClick(MouseEvent event, String message, ArrayList<PieceState> newState) {
+    public void onOptionClick(MouseEvent event, String message, ArrayList<PieceState> state, ArrayList<PieceState> newState) {
         Type type;
         if(this.getTurn()) {
             type = Type.BLACK;
@@ -69,7 +83,7 @@ public class Controller {
             type = Type.RED;
         }
 
-        HBox item = this._gui.createHistoryItem(type, message);
+        HBox item = this._gui.createHistoryItem(type, message, state, this);
         this._gui.history.getChildren().add(item);
         item.toBack();
 
@@ -85,5 +99,14 @@ public class Controller {
                 c.getStyleClass().add("option--visible");
             }
         });
+    }
+
+    public void onHistoryItemClick(MouseEvent event, ArrayList<PieceState> state) {
+        if (state != null) {
+            this.updateState(state, true, null);
+
+            int i = 0;
+            while(this._gui.history.getChildren().remove(i) != (HBox) ((Pane) event.getTarget()).getParent()) {}
+        }
     }
 }
