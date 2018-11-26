@@ -39,7 +39,7 @@ public class GUI {
         this.pieces.getChildren().clear();
     }
 
-    public void setup(ArrayList<PieceState> state, Controller controller) {
+    public void setup(State state, Controller controller) {
         this.resetPieces();
 
         HBox.setHgrow(this.historyScroll, Priority.ALWAYS);
@@ -97,16 +97,16 @@ public class GUI {
         }
     }
 
-    public void render(ArrayList<PieceState> state, ArrayList<Move> successors, Controller controller) {
+    public void render(State state, ArrayList<Move> successors, Controller controller) {
         this.resetPieces();
         this._options = new ArrayList<Circle>();
 
-        for(PieceState s: state) {
+        for(PieceState s: state.getPieces()) {
             if(s.isActive()) {
                 // Add piece button
                 Color colour;
 
-                if(state.indexOf(s) < 12) {
+                if(state.getPieces().indexOf(s) < 12) {
                    colour = Color.rgb(255, 159, 67);
                 }
                 else {
@@ -124,7 +124,7 @@ public class GUI {
         for(Map.Entry<PieceState, ArrayList<Move>> entry: group.entrySet()) {
             PieceState changedPiece = null;
             try {
-                changedPiece = PieceState.identifyChangedPiece(entry.getValue().get(0).getPreviousMove().getCurrent(), entry.getValue().get(0).getPreviousMove().getNext())[1];
+                changedPiece = PieceState.identifyChangedPiece(entry.getValue().get(0).getPreviousMove().getCurrent().getPieces(), entry.getValue().get(0).getPreviousMove().getNext().getPieces())[1];
             }
             catch(NullPointerException e) {}
 
@@ -139,8 +139,8 @@ public class GUI {
                 // Add origin class to original piece
                 changedPiecePane.getStyleClass().add("origin");
 
-                String message = PieceState.changesToString(move.getFirstMove().getCurrent(), move.getNext());
-                Circle optionButton = this.createOptionButton(piece.getX(), piece.getY(), message, "" + originalPieceState.getX() + originalPieceState.getY(), state, move.getNext(), controller);
+                String message = PieceState.changesToString(move.getFirstMove().getCurrent().getPieces(), move.getNext().getPieces());
+                Circle optionButton = this.createOptionButton(piece.getX(), piece.getY(), message, "" + originalPieceState.getX() + originalPieceState.getY(), move.getFirstMove().getCurrent(), move.getNext(), controller);
                 this.pieces.getChildren().add(optionButton);
                 this._options.add(optionButton);
             }
@@ -150,7 +150,7 @@ public class GUI {
 
                 // Get the origin piece that started the move (for css hiding on click)
                 Move firstMove = move.getFirstMove();
-                PieceState originalPiece = PieceState.identifyChangedPiece(firstMove.getCurrent(), firstMove.getNext())[0];
+                PieceState originalPiece = PieceState.identifyChangedPiece(firstMove.getCurrent().getPieces(), firstMove.getNext().getPieces())[0];
 
                 Circle optionButton = this.createSemiOptionButton(piece.getX(), piece.getY(), "" + originalPiece.getX() + originalPiece.getY(), move.getNext(), entry.getValue(), controller);
                 this.pieces.getChildren().add(optionButton);
@@ -185,7 +185,7 @@ public class GUI {
         return pieceStack;
     }
 
-    public Circle createOptionButton(int x, int y, String message, String owner, ArrayList<PieceState> state, ArrayList<PieceState> newState, Controller controller) {
+    public Circle createOptionButton(int x, int y, String message, String owner, State state, State newState, Controller controller) {
         Circle pieceButton = new Circle();
         pieceButton.setRadius(34);
         pieceButton.setFill(Color.TRANSPARENT);
@@ -201,7 +201,7 @@ public class GUI {
         return pieceButton;
     }
 
-    public Circle createSemiOptionButton(int x, int y, String owner, ArrayList<PieceState> newState, ArrayList<Move> restrictedMoves, Controller controller) {
+    public Circle createSemiOptionButton(int x, int y, String owner, State newState, ArrayList<Move> restrictedMoves, Controller controller) {
         Circle pieceButton = new Circle();
         pieceButton.setRadius(34);
         pieceButton.setFill(Color.TRANSPARENT);
@@ -217,7 +217,7 @@ public class GUI {
         return pieceButton;
     }
 
-    public HBox createHistoryItem(Controller.Type type, String text, ArrayList<PieceState> state, Controller controller) {
+    public HBox createHistoryItem(Controller.Type type, String text, State state, Controller controller) {
         HBox item = new HBox();
         item.getStyleClass().add("history__item");
         item.setAlignment(Pos.CENTER_LEFT);
@@ -259,13 +259,12 @@ public class GUI {
 
         for(Move move: moves) {
             // Get the location of the start piece and the end piece (once moved)
-            PieceState[] changedPieces = PieceState.identifyChangedPiece(move.getCurrent(), move.getNext());
+            PieceState[] changedPieces = PieceState.identifyChangedPiece(move.getCurrent().getPieces(), move.getNext().getPieces());
 
             // Add a move to the end piece key. If it is a complete move then previousMove will be null and this will
             // be the only move added. If previousMove isn't null then this is a semiMove and part of a larger path
             Move addedMove;
             if(previousMove == null) {
-                move.setIsEndMove(true);
                 addedMove = move;
             }
             else {
@@ -306,7 +305,7 @@ public class GUI {
             // originalPiece will be null once we have reached the first move
             if (originalPiece == null) {
                 // Attempt to find the board piece
-                PieceState originalPieceState = PieceState.identifyChangedPiece(move.getCurrent(), move.getNext())[0];
+                PieceState originalPieceState = PieceState.identifyChangedPiece(move.getCurrent().getPieces(), move.getNext().getPieces())[0];
                 StackPane changedPiecePane = (StackPane) scene.lookup("#" + originalPieceState.getX() + originalPieceState.getY());
 
                 // If there is no board piece then relinquish control to the above recurse level

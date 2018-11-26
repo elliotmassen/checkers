@@ -10,7 +10,6 @@ import java.util.ArrayList;
 public class Controller {
     private GUI _gui;
     private StateManager _stateManager;
-    private boolean _turn;
 
     public enum Type {
         RED,
@@ -21,37 +20,24 @@ public class Controller {
     public Controller(GUI gui, StateManager stateManager) {
         this._gui = gui;
         this._stateManager = stateManager;
-        this._turn = true;
-    }
-
-    public boolean getTurn() {
-        return this._turn;
-    }
-
-    public void endTurn() {
-        this._turn = !this._turn;
     }
 
     public void setup() {
         this._gui.setup(this._stateManager.getState(), this);
-        this.updateGUI(this._stateManager.getSuccessors(this.getTurn()));
+        this.updateGUI(this._stateManager.getSuccessors());
     }
 
-    public void updateState(ArrayList<PieceState> newState, boolean isTurnEnd, ArrayList<Move> successors) {
-        ArrayList<PieceState> previousState = this._stateManager.getState();
+    public void updateState(State newState, ArrayList<Move> successors) {
+        State previousState = this._stateManager.getState();
         this._stateManager.setState(newState);
 
-        if (isTurnEnd) {
-            this.endTurn();
-        }
-
         if (successors == null) {
-            successors = this._stateManager.getSuccessors(this.getTurn());
+            successors = this._stateManager.getSuccessors();
         }
 
-        if(this._stateManager.isGoalState(!this.getTurn(), successors)) {
+        if(this._stateManager.isGoalState(!this._stateManager.getState().getTurn(), successors)) {
             Type type;
-            if(!this.getTurn()) {
+            if(!this._stateManager.getState().getTurn()) {
                 type = Type.BLACK;
             }
             else {
@@ -70,13 +56,13 @@ public class Controller {
         this._gui.render(this._stateManager.getState(), successors, this);
     }
 
-    public void onSemiOptionClick(MouseEvent event, ArrayList<PieceState> newState, ArrayList<Move> restrictedMoves) {
-        this.updateState(newState, false, restrictedMoves);
+    public void onSemiOptionClick(MouseEvent event, State newState, ArrayList<Move> restrictedMoves) {
+        this.updateState(newState, restrictedMoves);
     }
 
-    public void onOptionClick(MouseEvent event, String message, ArrayList<PieceState> state, ArrayList<PieceState> newState) {
+    public void onOptionClick(MouseEvent event, String message, State state, State newState) {
         Type type;
-        if(this.getTurn()) {
+        if(state.getTurn()) {
             type = Type.BLACK;
         }
         else {
@@ -87,7 +73,7 @@ public class Controller {
         this._gui.history.getChildren().add(item);
         item.toBack();
 
-        this.updateState(newState, true, null);
+        this.updateState(newState, null);
     }
 
     public void onPieceClick(MouseEvent event, int x, int y, ArrayList<Circle> options) {
@@ -101,9 +87,9 @@ public class Controller {
         });
     }
 
-    public void onHistoryItemClick(MouseEvent event, ArrayList<PieceState> state) {
+    public void onHistoryItemClick(MouseEvent event, State state) {
         if (state != null) {
-            this.updateState(state, true, null);
+            this.updateState(state, null);
 
             int i = 0;
             while(this._gui.history.getChildren().remove(i) != (HBox) ((Pane) event.getTarget()).getParent()) {}

@@ -3,12 +3,12 @@ package main;
 import java.util.ArrayList;
 
 public class Move {
-    private ArrayList<PieceState> _current;
-    private ArrayList<PieceState> _next;
+    private State _current;
+    private State _next;
     private Move _previousMove;
     private boolean _isEndMove;
 
-    public Move(ArrayList<PieceState> current, ArrayList<PieceState> next, Move previousMove) {
+    public Move(State current, State next, Move previousMove) {
         this._current = current;
         this._next = next;
         this._previousMove = previousMove;
@@ -16,11 +16,11 @@ public class Move {
         this.setIsEndMove(false);
     }
 
-    public ArrayList<PieceState> getCurrent() {
+    public State getCurrent() {
         return this._current;
     }
 
-    public ArrayList<PieceState> getNext() {
+    public State getNext() {
         return this._next;
     }
 

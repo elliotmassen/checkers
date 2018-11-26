@@ -1,4 +1,5 @@
 import main.PieceState;
+import main.State;
 import main.StateManager;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -47,11 +48,11 @@ class PieceStateTest {
     @Test
     public void testIdentifyChangedPieceInState() {
         // Create an initial state
-        ArrayList<PieceState> state = StateManager.createTestState();
+        State state = StateManager.createTestState();
 
         // Select a piece to be moved
         int index = 12;
-        PieceState piece = state.get(index);
+        PieceState piece = ((State) state).getPieces().get(index);
         assertEquals(5, piece.getX());
         assertEquals(0, piece.getY());
 
@@ -59,16 +60,16 @@ class PieceStateTest {
         PieceState newPiece = new PieceState(piece.getX() - 2, piece.getY() + 0, piece.isKing());
 
         // Create a next state based on the initial state and moved piece
-        ArrayList<PieceState> nextState = StateManager.createNewState(state, piece, newPiece);
+        State nextState = StateManager.createNewState(state, piece, newPiece, true);
 
         // identifyChangedPiece should return two pieces, the original piece and the moved piece
-        PieceState changedPiece = nextState.get(index);
-        PieceState[] expectedChangedPiece = PieceState.identifyChangedPiece(state, nextState);
+        PieceState changedPiece = nextState.getPieces().get(index);
+        PieceState[] expectedChangedPiece = PieceState.identifyChangedPiece(state.getPieces(), nextState.getPieces());
         assertEquals(expectedChangedPiece[0], piece);
         assertEquals(expectedChangedPiece[1], changedPiece);
 
         // changesToString should produce a correct string
-        String message = PieceState.changesToString(state, nextState);
+        String message = PieceState.changesToString(state.getPieces(), nextState.getPieces());
         assertEquals(message, "jumps from [5, 0] to [3, 0]");
     }
 }

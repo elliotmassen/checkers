@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class StateManager {
-    private ArrayList<PieceState> _state;
+    private State _state;
 
-    public StateManager(ArrayList<PieceState> state) {
+    public StateManager(State state) {
         this.setState(state);
     }
 
-    public ArrayList<PieceState> getState() {
+    public State getState() {
         return this._state;
     }
 
@@ -19,7 +19,7 @@ public class StateManager {
     public PieceState getPieceByLocation(int x, int y) {
         PieceState found = null;
 
-        for(PieceState p: this.getState()) {
+        for(PieceState p: this.getState().getPieces()) {
             if(p.getX() == x && p.getY() == y) {
                 found = p;
                 break;
@@ -29,7 +29,7 @@ public class StateManager {
         return found;
     }
 
-    public void setState(ArrayList<PieceState> newState) {
+    public void setState(State newState) {
         this._state = newState;
     }
 
@@ -79,13 +79,11 @@ public class StateManager {
      * getSuccessors
      * This method returns a list of Moves. Each move contains a current and next state, as well as a potential
      * following move (for jumps).
-     * @param turn
      * @return A list of Moves.
      */
-    // TODO: Should turn actually not be in the state representation?
-    public ArrayList<Move> getSuccessors(boolean turn) {
+    public ArrayList<Move> getSuccessors() {
         // Convert state rep into a 2d grid
-        int[][] grid = StateManager.create2DGrid(this.getState());
+        int[][] grid = StateManager.create2DGrid(this.getState().getPieces());
 
         // For each piece in our turn (half of the rep) create Move's if there is an adjacent tile that is empty
         // or jump-able, and has a direction that is possible (king/not-king). For jumps we must explore the further
@@ -94,10 +92,10 @@ public class StateManager {
         ArrayList<Move> moves = new ArrayList<Move>();
         ArrayList<Move> jumps = new ArrayList<Move>();
         int index = 0;
-        for(PieceState p: this.getState()) {
-            if(index < 12 != turn && p.isActive()) {
-                moves.addAll(this._detectMoves(this.getState(), turn, p, grid));
-                jumps.addAll(this._detectJumps(this.getState(), turn, p, null, null));
+        for(PieceState p: this.getState().getPieces()) {
+            if(index < 12 != this.getState().getTurn() && p.isActive()) {
+                moves.addAll(this._detectMoves(this.getState(), p, grid));
+                jumps.addAll(this._detectJumps(this.getState(), p, null, this.getState().getTurn(), null));
             }
 
             index++;
@@ -109,6 +107,11 @@ public class StateManager {
             moves = jumps;
         }
 
+        for(Move m: moves) {
+            m.setIsEndMove(true);
+            m.getNext().setTurn(!this.getState().getTurn());
+        }
+
         return moves;
     }
 
@@ -116,7 +119,7 @@ public class StateManager {
         // The opponent has no active pieces
         boolean opponentHasActivePieces = false;
         int index = 0;
-        for(PieceState p: this.getState()) {
+        for(PieceState p: this.getState().getPieces()) {
             if(index < 12 == turn && p.isActive()) {
                 opponentHasActivePieces = true;
                 break;
@@ -131,9 +134,9 @@ public class StateManager {
         return !opponentHasActivePieces || numberOfSuccessorStates < 1;
     }
 
-    public static ArrayList<PieceState> createInitialState() {
+    public static State createInitialState() {
         // TODO: Use for loops (and modulo) to reduce lines here.
-        return new ArrayList<PieceState>() {{
+        return new State(new ArrayList<PieceState>() {{
             // Red pieces
             add(new PieceState(0, 1, false));
             add(new PieceState(0, 3, false));
@@ -161,11 +164,11 @@ public class StateManager {
             add(new PieceState(7, 2, false));
             add(new PieceState(7, 4, false));
             add(new PieceState(7, 6, false));
-        }};
+        }}, true);
     }
 
-    public static ArrayList<PieceState> createTestState() {
-        return new ArrayList<PieceState>() {{
+    public static State createTestState() {
+        return new State(new ArrayList<PieceState>() {{
             // Red pieces
             add(new PieceState(-1, -1, false));
             add(new PieceState(-1, -1, false));
@@ -193,50 +196,52 @@ public class StateManager {
             add(new PieceState(7, 2, false));
             add(new PieceState(7, 4, false));
             add(new PieceState(7, 6, false));
-        }};
+        }}, true);
     }
 
-    public static ArrayList<PieceState> createNewState(ArrayList<PieceState> state, PieceState find, PieceState replace) {
+    public static State createNewState(State state, PieceState find, PieceState replace, boolean endTurn) {
         // This is just a shallow copy, so the PieceState references will remain the same - this is good for detect
         // equality (or lack thereof)
-        ArrayList<PieceState> temp = (ArrayList<PieceState>) state.clone();
-        int index = state.indexOf(find);
+        ArrayList<PieceState> tempPieces = (ArrayList<PieceState>) state.getPieces().clone();
+        int index = state.getPieces().indexOf(find);
 
         if(index >= 0) {
-            temp.set(index, replace);
+            tempPieces.set(index, replace);
         }
 
-        return temp;
+        boolean turn = endTurn ? !state.getTurn() : state.getTurn();
+
+        return new State(tempPieces, turn);
     }
 
-    private ArrayList<Move> _detectJumps(ArrayList<PieceState> state, boolean turn, PieceState piece, Move previousMove, int[][] grid) {
+    private ArrayList<Move> _detectJumps(State state, PieceState piece, Move previousMove, boolean overrideTurn, int[][] grid) {
         ArrayList<Move> moves = new ArrayList<Move>();
 
         // If there is no grid (eg. this is the initial call) then create it
         if(grid == null) {
-            grid = StateManager.create2DGrid(state);
+            grid = StateManager.create2DGrid(state.getPieces());
         }
 
         // Top left
-        moves.addAll(this._detectJumpInDirection(-2, -2, state, turn, piece, previousMove, grid));
+        moves.addAll(this._detectJumpInDirection(-2, -2, state, piece, previousMove, overrideTurn, grid));
 
         // Top right
-        moves.addAll(this._detectJumpInDirection(-2, 2, state, turn, piece, previousMove, grid));
+        moves.addAll(this._detectJumpInDirection(-2, 2, state, piece, previousMove, overrideTurn, grid));
 
         // Bottom left
-        moves.addAll(this._detectJumpInDirection(2, -2, state, turn, piece, previousMove, grid));
+        moves.addAll(this._detectJumpInDirection(2, -2, state, piece, previousMove, overrideTurn, grid));
 
         // Bottom right
-        moves.addAll(this._detectJumpInDirection(2, 2, state, turn, piece, previousMove, grid));
+        moves.addAll(this._detectJumpInDirection(2, 2, state, piece, previousMove, overrideTurn, grid));
 
         return moves;
     }
 
-    private ArrayList<Move> _detectJumpInDirection(int xChange, int yChange, ArrayList<PieceState> state, boolean turn, PieceState piece, Move previousMove, int[][] grid) {
+    private ArrayList<Move> _detectJumpInDirection(int xChange, int yChange, State state, PieceState piece, Move previousMove, boolean overrideTurn, int[][] grid) {
         ArrayList<Move> moves = new ArrayList<Move>();
         HashSet<Integer> enemies = new HashSet<Integer>();
 
-        if(turn) {
+        if(overrideTurn) {
             enemies.add(1);
             enemies.add(2);
         }
@@ -246,8 +251,8 @@ public class StateManager {
         }
 
         // Determine if the player is allowed to move up and/or down
-        boolean canMoveTop = turn || piece.isKing();
-        boolean canMoveBottom = !turn || piece.isKing();
+        boolean canMoveTop = overrideTurn || piece.isKing();
+        boolean canMoveBottom = !overrideTurn || piece.isKing();
         int xDirection = (int) Math.signum(xChange);
 
         // If player has permission to move in that direction and the space is valid
@@ -265,15 +270,15 @@ public class StateManager {
                     && enemies.contains(grid[piece.getX() + inbetweenXChange][piece.getY() + inbetweenYChange])) {
                 // Create state in which the piece has jumped
                 PieceState newPiece = new PieceState(piece.getX() + xChange, piece.getY() + yChange, piece.isKing());
-                newPiece.makeKingIfAtBoardEnd(turn);
-                ArrayList<PieceState> nextState = StateManager.createNewState(state, piece, newPiece);
+                newPiece.makeKingIfAtBoardEnd(overrideTurn);
+                State nextState1 = StateManager.createNewState(state, piece, newPiece, false);
 
                 // Create based on the previous one in which the jumped over piece becomes in active
                 PieceState jumpedOver = this.getPieceByLocation(piece.getX() + inbetweenXChange, piece.getY() + inbetweenYChange);
-                nextState = StateManager.createNewState(nextState, jumpedOver, new PieceState(-1, -1, jumpedOver.isKing()));
+                State nextState = StateManager.createNewState(nextState1, jumpedOver, new PieceState(-1, -1, jumpedOver.isKing()), false);
 
                 Move newMove = new Move(state, nextState, previousMove);
-                ArrayList<Move> followingMoves = this._detectJumps(nextState, turn, newPiece, newMove, null);
+                ArrayList<Move> followingMoves = this._detectJumps(nextState, newPiece, newMove, overrideTurn, null);
 
                 // If there were no following moves, then newMove is a completeMove and should be returned
                 if(followingMoves.size() < 1) {
@@ -289,30 +294,30 @@ public class StateManager {
         return moves;
     }
 
-    private ArrayList<Move> _detectMoves(ArrayList<PieceState> state, boolean turn, PieceState piece, int[][] grid) {
+    private ArrayList<Move> _detectMoves(State state, PieceState piece, int[][] grid) {
         ArrayList<Move> moves = new ArrayList<Move>();
 
         // Top left
-        moves.addAll(this._detectMoveInDirection(-1, -1, state, turn, piece, grid));
+        moves.addAll(this._detectMoveInDirection(-1, -1, state, piece, grid));
 
         // Top right
-        moves.addAll(this._detectMoveInDirection(-1, 1, state, turn, piece, grid));
+        moves.addAll(this._detectMoveInDirection(-1, 1, state, piece, grid));
 
         // Bottom left
-        moves.addAll(this._detectMoveInDirection(1, -1, state, turn, piece, grid));
+        moves.addAll(this._detectMoveInDirection(1, -1, state, piece, grid));
 
         // Bottom right
-        moves.addAll(this._detectMoveInDirection(1, 1, state, turn, piece, grid));
+        moves.addAll(this._detectMoveInDirection(1, 1, state, piece, grid));
 
         return moves;
     }
 
     // An array list is used (even though it'll only be a singular move) to avoid having to do null checking
-    private ArrayList<Move> _detectMoveInDirection(int xChange, int yChange, ArrayList<PieceState> state, boolean turn, PieceState piece, int[][] grid) {
+    private ArrayList<Move> _detectMoveInDirection(int xChange, int yChange, State state, PieceState piece, int[][] grid) {
         ArrayList<Move> moves = new ArrayList<Move>();
 
         // The piece can move if has permission to move in that direction, the tile is valid and the destination tile is empty
-        boolean hasPermission = piece.isKing() || (xChange == -1 && turn) || (xChange == 1 && !turn);
+        boolean hasPermission = piece.isKing() || (xChange == -1 && state.getTurn()) || (xChange == 1 && !state.getTurn());
         boolean hasPermissionAndTileIsValid = hasPermission
                 && Math.min(0, piece.getX() + xChange) == 0
                 && Math.max(7, piece.getX() + xChange) == 7
@@ -323,8 +328,8 @@ public class StateManager {
 
         if (hasPermissionAndTileIsValidAndTileIsEmpty) {
             PieceState newPiece = new PieceState(piece.getX() + xChange, piece.getY() + yChange, piece.isKing());
-            newPiece.makeKingIfAtBoardEnd(turn);
-            moves.add(new Move(state, StateManager.createNewState(state, piece, newPiece), null));
+            newPiece.makeKingIfAtBoardEnd(state.getTurn());
+            moves.add(new Move(state, StateManager.createNewState(state, piece, newPiece, true), null));
         }
 
         return moves;

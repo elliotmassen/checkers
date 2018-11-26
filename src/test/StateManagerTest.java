@@ -1,5 +1,6 @@
 import main.Move;
 import main.PieceState;
+import main.State;
 import main.StateManager;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -12,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class StateManagerTest {
     private StateManager _stateManager;
-    private ArrayList<PieceState> _testState;
+    private State _testState;
 
     public StateManagerTest() {
         this._testState = StateManager.createTestState();
@@ -37,7 +38,7 @@ class StateManagerTest {
     public void testStateManagerCreateNewState() {
         // Select a piece to be moved
         int index = 12;
-        PieceState piece = this._stateManager.getState().get(index);
+        PieceState piece = this._stateManager.getState().getPieces().get(index);
         assertEquals(5, piece.getX());
         assertEquals(0, piece.getY());
 
@@ -45,18 +46,23 @@ class StateManagerTest {
         PieceState newPiece = new PieceState(piece.getX() - 2, piece.getY() + 2, piece.isKing());
 
         // Create a next state based on the initial state and moved piece
-        ArrayList<PieceState> nextState = StateManager.createNewState(this._stateManager.getState(), piece, newPiece);
+        State nextState = StateManager.createNewState(this._stateManager.getState(), piece, newPiece, true);
 
         // Using the same index as before, we should now find the piece has been updated
-        PieceState changedPiece = nextState.get(index);
+        PieceState changedPiece = nextState.getPieces().get(index);
         assertEquals(3, changedPiece.getX());
         assertEquals(2, changedPiece.getY());
     }
 
     @Test void testStateManagerSetState() {
-        ArrayList<PieceState> nextState = StateManager.createInitialState();
+        State nextState = StateManager.createInitialState();
+        assertTrue(nextState.getTurn());
         this._stateManager.setState(nextState);
         assertEquals(nextState, this._stateManager.getState());
+
+        State newState = StateManager.createNewState(this._stateManager.getState(), this._stateManager.getState().getPieces().get(0), new PieceState(-1, -1, false), true);
+        this._stateManager.setState(newState);
+        assertFalse(this._stateManager.getState().getTurn());
     }
 
     @Test
@@ -72,7 +78,7 @@ class StateManagerTest {
                 {0, 3, 0, 3, 0, 3, 0, 3},
                 {3, 0, 3, 0, 3, 0, 3, 0},
         };
-        int[][] actualTestGrid = StateManager.create2DGrid(this._stateManager.getState());
+        int[][] actualTestGrid = StateManager.create2DGrid(this._stateManager.getState().getPieces());
         assertArrayEquals(expectedTestGrid, actualTestGrid);
 
         // Change state to initial state and check that grid changes
@@ -87,7 +93,7 @@ class StateManagerTest {
                 {0, 3, 0, 3, 0, 3, 0, 3},
                 {3, 0, 3, 0, 3, 0, 3, 0},
         };
-        int[][] actualInitialGrid = StateManager.create2DGrid(this._stateManager.getState());
+        int[][] actualInitialGrid = StateManager.create2DGrid(this._stateManager.getState().getPieces());
         assertArrayEquals(expectedInitialGrid, actualInitialGrid);
     }
 
@@ -97,7 +103,7 @@ class StateManagerTest {
 
         // Expect moves to: [4, 1], [4, 1], [4, 3], [4, 3], [4, 5], [4, 5], [4, 7]
         int expectedNumOfMoves = 7;
-        ArrayList<Move> moves = this._stateManager.getSuccessors(true);
+        ArrayList<Move> moves = this._stateManager.getSuccessors();
         assertEquals(expectedNumOfMoves, moves.size());
 
         int[][] expectedMoves = new int[][]{
@@ -112,7 +118,7 @@ class StateManagerTest {
         int[][] actualMoves = new int[expectedNumOfMoves][2];
         int i = 0;
         for(Move m: moves) {
-            PieceState[] piece = PieceState.identifyChangedPiece(m.getCurrent(), m.getNext());
+            PieceState[] piece = PieceState.identifyChangedPiece(m.getCurrent().getPieces(), m.getNext().getPieces());
             actualMoves[i] = new int[]{piece[1].getX(), piece[1].getY()};
             i++;
         }
@@ -128,7 +134,7 @@ class StateManagerTest {
     public void testStateManagerGetSuccessorsWithJumps() {
         // Expect moves to: [1, 2], [1, 0], [1, 4]
         int expectedNumOfMoves = 3;
-        ArrayList<Move> moves = this._stateManager.getSuccessors(true);
+        ArrayList<Move> moves = this._stateManager.getSuccessors();
         assertEquals(expectedNumOfMoves, moves.size());
 
         int[][] expectedMoves = new int[][]{
@@ -139,7 +145,7 @@ class StateManagerTest {
         int[][] actualMoves = new int[expectedNumOfMoves][2];
         int i = 0;
         for(Move m: moves) {
-            PieceState[] piece = PieceState.identifyChangedPiece(m.getCurrent(), m.getNext());
+            PieceState[] piece = PieceState.identifyChangedPiece(m.getCurrent().getPieces(), m.getNext().getPieces());
             actualMoves[i] = new int[]{piece[1].getX(), piece[1].getY()};
             i++;
         }
@@ -152,19 +158,19 @@ class StateManagerTest {
 
         // [1, 0] -> [3, 2]
         prevMove = moves.get(0).getPreviousMove();
-        piece = PieceState.identifyChangedPiece(prevMove.getCurrent(), prevMove.getNext())[1];
+        piece = PieceState.identifyChangedPiece(prevMove.getCurrent().getPieces(), prevMove.getNext().getPieces())[1];
         assertEquals(3, piece.getX());
         assertEquals(2, piece.getY());
 
         // [1, 4] -> [3, 2]
         prevMove = moves.get(1).getPreviousMove();
-        piece = PieceState.identifyChangedPiece(prevMove.getCurrent(), prevMove.getNext())[1];
+        piece = PieceState.identifyChangedPiece(prevMove.getCurrent().getPieces(), prevMove.getNext().getPieces())[1];
         assertEquals(3, piece.getX());
         assertEquals(2, piece.getY());
 
         // [1, 2] -> [3, 0]
         prevMove = moves.get(2).getPreviousMove();
-        piece = PieceState.identifyChangedPiece(prevMove.getCurrent(), prevMove.getNext())[1];
+        piece = PieceState.identifyChangedPiece(prevMove.getCurrent().getPieces(), prevMove.getNext().getPieces())[1];
         assertEquals(3, piece.getX());
         assertEquals(0, piece.getY());
     }
