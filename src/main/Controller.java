@@ -41,11 +41,15 @@ public class Controller {
     public void updateState(ArrayList<PieceState> newState, boolean isTurnEnd, ArrayList<Move> successors) {
         this._stateManager.setState(newState);
 
-        if(isTurnEnd) {
+        if (isTurnEnd) {
             this.endTurn();
         }
 
-        this.updateGUI(successors);
+        if (successors == null) {
+            this.updateGUI(this._stateManager.getSuccessors(this.getTurn()));
+        } else {
+            this.updateGUI(successors);
+        }
     }
 
     public void updateGUI(ArrayList<Move> successors) {
@@ -69,7 +73,7 @@ public class Controller {
         this._gui.history.getChildren().add(item);
         item.toBack();
 
-        this.updateState(newState, true, this._stateManager.getSuccessors(this.getTurn()));
+        this.updateState(newState, true, null);
     }
 
     public void onPieceClick(MouseEvent event, int x, int y, ArrayList<Circle> options) {

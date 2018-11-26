@@ -15,7 +15,6 @@ import javafx.scene.text.Text;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 public class GUI {
@@ -122,62 +121,46 @@ public class GUI {
             }
         }
 
-        // For each potential move, find the piece that has moved.
+        // Get all moves group by the piece they move (eg. where we want to place an option button)
+        HashMap<PieceState, ArrayList<Move>> group = GUI.groupBySharedPath(successors, null);
 
-        // Collect all moves, including multi-jump moves
-        ArrayList<Move> allMoves = new ArrayList<Move>();
-        for(Move m: successors) {
-            allMoves.add(m);
-            allMoves.addAll(m.getAllMoves());
-        }
+        for(Map.Entry<PieceState, ArrayList<Move>> entry: group.entrySet()) {
+            // We can be confident that each move list contains at least one item and also that if the first is an
+            // end move, then it is the only move in the list
+//            if(entry.getValue().get(0).isEndMove()) {
+//            if(entry.getKey().equals(PieceState.identifyChangedPiece(entry.getValue().get(0).getCurrent(), entry.getValue().get(0).getNext()))) {
 
-        // Group moves by the piece that changed
-        HashMap<PieceState, ArrayList<Move>> changedPieces = new HashMap<PieceState, ArrayList<Move>>();
-        for(Move m: allMoves) {
-            // PieceState changed = PieceState.identifyChangedPiece(m.getCurrent(), m.getFinalState());
-
-            System.out.println("MOVE");
-            System.out.println(PieceState.stateToString(m.getCurrent()));
-            System.out.println(PieceState.stateToString(m.getNext()));
-            System.out.println("");
-
-            PieceState[] changed = PieceState.identifyChangedPiece(m.getCurrent(), m.getNext());
-            System.out.println("[" + changed[0].getX() + ", " + changed[0].getY() + "]");
-            PieceState changedCurrent = changed[0];
-            changedPieces.computeIfAbsent(changedCurrent, k -> new ArrayList<Move>()).add(m);
-        }
-
-        for(Map.Entry<PieceState, ArrayList<Move>> entry: changedPieces.entrySet()) {
-            // If the first move is an origin, then the rest for that piece must also be
-            if(entry.getValue().get(0).isOrigin()) {
-                Scene scene = this.pieces.getScene();
-                Circle changedPieceCircle = (Circle) scene.lookup("#" + entry.getKey().getX() + entry.getKey().getY());
-                changedPieceCircle.getStyleClass().add("origin");
+            PieceState changedPiece = null;
+            try {
+                changedPiece = PieceState.identifyChangedPiece(entry.getValue().get(0).getPreviousMove().getCurrent(), entry.getValue().get(0).getPreviousMove().getNext())[1];
             }
+            catch(NullPointerException e) {}
 
-            // If there's only one move for the piece, it's more straightforward
-            if(entry.getValue().size() < 2) {
-                String message = PieceState.changesToString(entry.getValue().get(0).getCurrent(), entry.getValue().get(0).getFinalState());
-                PieceState[] changedTemp = PieceState.identifyChangedPiece(entry.getValue().get(0).getCurrent(), entry.getValue().get(0).getNext());
-                PieceState changedNext = changedTemp[1];
-                // TODO: The message here will print the same coords, not the original place of the piece?
-                Circle optionButton = this.createOptionButton(changedNext.getX(), changedNext.getY(), message, "" + entry.getKey().getX() + entry.getKey().getY(), entry.getValue().get(0).getFinalState(), controller);
+            if(!entry.getKey().equals(changedPiece)) {
+                Move move = entry.getValue().get(0);
+                PieceState piece = entry.getKey();
+
+                Scene scene = this.pieces.getScene();
+                PieceState originalPieceState = this._lookupOriginalPiece(move, scene);
+                Circle changedPieceCircle = (Circle) scene.lookup("#" + originalPieceState.getX() + originalPieceState.getY());
+
+                // Add origin class to original piece
+                changedPieceCircle.getStyleClass().add("origin");
+
+                Circle optionButton = this.createOptionButton(piece.getX(), piece.getY(), PieceState.changesToString(move.getCurrent(), move.getNext()), "" + originalPieceState.getX() + originalPieceState.getY(), move.getNext(), controller);
                 this.pieces.getChildren().add(optionButton);
                 this._options.add(optionButton);
             }
-            // If there's more than one move that moves through the piece we need to allow for intermediary shared states
-            // that exist between real states
             else {
-                PieceState[] changedTemp = PieceState.identifyChangedPiece(entry.getValue().get(0).getCurrent(), entry.getValue().get(0).getNext());
-                PieceState changedNext = changedTemp[1];
-                PieceState[] original = PieceState.identifyChangedPiece(entry.getValue().get(0).getFirstState(), entry.getValue().get(0).getNext());
+                // TODO: Can we be confident that the first element shares the same path origin and the other elements?
+                Move move = entry.getValue().get(0).getPreviousMove();
+                PieceState piece = entry.getKey();
 
-                System.out.println("[" + entry.getKey().getX() + ", " + entry.getKey().getY() + "]");
-                System.out.println(changedNext);
-                System.out.println(original);
-                System.out.println(entry.getValue().size());
+                // Get the origin piece that started the move (for css hiding on click)
+                Move firstMove = move.getFirstMove();
+                PieceState originalPiece = PieceState.identifyChangedPiece(firstMove.getCurrent(), firstMove.getNext())[0];
 
-                Circle optionButton = this.createSemiOptionButton(changedNext.getX(), changedNext.getY(), "" + original[0].getX() + original[0].getY(), entry.getValue().get(0).getNext(), entry.getValue(), controller);
+                Circle optionButton = this.createSemiOptionButton(piece.getX(), piece.getY(), "" + originalPiece.getX() + originalPiece.getY(), move.getNext(), entry.getValue(), controller);
                 this.pieces.getChildren().add(optionButton);
                 this._options.add(optionButton);
             }
@@ -251,5 +234,73 @@ public class GUI {
 
         item.getChildren().add(new Text(text));
         return item;
+    }
+
+    public static HashMap<PieceState, ArrayList<Move>> groupBySharedPath(ArrayList<Move> moves, Move previousMove) {
+        HashMap<PieceState, ArrayList<Move>> group = new HashMap<PieceState, ArrayList<Move>>();
+
+        for(Move move: moves) {
+            // Get the location of the start piece and the end piece (once moved)
+            PieceState[] changedPieces = PieceState.identifyChangedPiece(move.getCurrent(), move.getNext());
+
+            // Add a move to the end piece key. If it is a complete move then previousMove will be null and this will
+            // be the only move added. If previousMove isn't null then this is a semiMove and part of a larger path
+            Move addedMove;
+            if(previousMove == null) {
+                move.setIsEndMove(true);
+                addedMove = move;
+            }
+            else {
+                addedMove = previousMove;
+            }
+
+            group.computeIfAbsent(changedPieces[1], k -> new ArrayList<Move>()).add(addedMove);
+
+            // If the move is part of a path then we must group those moves too
+            if(move.getPreviousMove() != null) {
+                // Create a one element array containing the parent of the previous move
+                ArrayList<Move> parentMoveArray = new ArrayList<Move>() {{ add(move.getPreviousMove()); }};
+
+                // Get groups from previous move
+                HashMap<PieceState, ArrayList<Move>> newGroup = GUI.groupBySharedPath(parentMoveArray, move);
+
+                // Add each of the groups to our grouping
+                for(Map.Entry<PieceState, ArrayList<Move>> entry: newGroup.entrySet()) {
+                    group.merge(entry.getKey(), entry.getValue(), (ArrayList<Move> oldMoves, ArrayList<Move> newMoves) -> {
+                        oldMoves.addAll(newMoves);
+                        return oldMoves;
+                    });
+                }
+            }
+        }
+
+        return group;
+    }
+
+    private PieceState _lookupOriginalPiece(Move move, Scene scene) {
+        PieceState originalPiece = null;
+
+        // move will be null once it has recursively reached the first move
+        if(move != null) {
+            // Recurse
+            originalPiece = this._lookupOriginalPiece(move.getPreviousMove(), scene);
+
+            // originalPiece will be null once we have reached the first move
+            if (originalPiece == null) {
+                // Attempt to find the board piece
+                PieceState originalPieceState = PieceState.identifyChangedPiece(move.getCurrent(), move.getNext())[0];
+                Circle changedPieceCircle = (Circle) scene.lookup("#" + originalPieceState.getX() + originalPieceState.getY());
+
+                // If there is no board piece then relinquish control to the above recurse level
+                if(changedPieceCircle == null) {
+                    originalPiece = null;
+                }
+                else {
+                    originalPiece = originalPieceState;
+                }
+            }
+        }
+
+        return originalPiece;
     }
 }

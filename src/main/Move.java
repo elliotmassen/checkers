@@ -6,15 +6,14 @@ public class Move {
     private ArrayList<PieceState> _current;
     private ArrayList<PieceState> _next;
     private Move _previousMove;
-    private Move _followingMove;
-    private boolean _isOrigin;
+    private boolean _isEndMove;
 
-    public Move(ArrayList<PieceState> current, ArrayList<PieceState> next, Move previousMove, Move followingMove, boolean isOrigin) {
+    public Move(ArrayList<PieceState> current, ArrayList<PieceState> next, Move previousMove) {
         this._current = current;
         this._next = next;
         this._previousMove = previousMove;
-        this._followingMove = followingMove;
-        this._isOrigin = isOrigin;
+
+        this.setIsEndMove(false);
     }
 
     public ArrayList<PieceState> getCurrent() {
@@ -27,40 +26,17 @@ public class Move {
 
     public Move getPreviousMove() { return this._previousMove; }
 
-    public Move getFollowingMove() {
-        return this._followingMove;
+    public boolean isEndMove() { return this._isEndMove; }
+
+    public void setIsEndMove(boolean isEndMove) {
+        this._isEndMove = isEndMove;
     }
 
-    public void setPreviousMove(Move move) { this._previousMove = move; }
-
-    public void setFollowingMove(Move move) {
-        this._followingMove = move;
-    }
-
-    public boolean isOrigin() {
-        return this._isOrigin;
-    }
-
-    public ArrayList<Move> getAllMoves() {
-        ArrayList<Move> allMoves = new ArrayList<Move>();
-
-        if(this.getFollowingMove() != null) {
-            allMoves.add(this.getFollowingMove());
-            allMoves.addAll(this.getFollowingMove().getAllMoves());
-        }
-
-        return allMoves;
-    }
-
-    public ArrayList<PieceState> getFirstState() {
-        return this.isOrigin() ? this.getCurrent() : this.getPreviousMove().getFirstState();
-    }
-
-    public ArrayList<PieceState> getFinalState() {
-        return this.getFollowingMove() != null ? this.getFollowingMove().getFinalState() : this.getNext();
+    public Move getFirstMove() {
+        return this.getPreviousMove() == null ? this : this.getPreviousMove().getFirstMove();
     }
 
     public Move clone() {
-        return new Move(this._current, this._next, this._previousMove, this._followingMove, this._isOrigin);
+        return new Move(this._current, this._next, this._previousMove);
     }
 }

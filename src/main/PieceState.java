@@ -39,7 +39,7 @@ public class PieceState {
         PieceState[] changed = null;
         int i = 0;
 
-        // If changed is not longer null it means we found the changed piece
+        // If changed is no longer null it means we found the changed piece
         while(i < current.size() && changed == null) {
             // We don't care about inactive pieces, we only want an active piece in new position
             if(current.get(i).isActive() && next.get(i).isActive() && !current.get(i).equals(next.get(i))) {
