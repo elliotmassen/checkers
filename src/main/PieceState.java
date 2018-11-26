@@ -29,6 +29,10 @@ public class PieceState {
         return this.getX() >= 0 && this.getY() >= 0;
     }
 
+    public void makeKing() {
+        this._isKing = true;
+    }
+
     public boolean equals(PieceState compare) {
         return this == compare
                 && this.getX() == compare.getX()
@@ -109,5 +113,15 @@ public class PieceState {
         }
 
         return gridString;
+    }
+
+    public void makeKingIfAtBoardEnd(boolean turn) {
+        if(this.isKing() || !this.isActive()) {
+            return;
+        }
+
+        if((this.getX() == 0 && turn) || (this.getX() == 7 && !turn)) {
+            this.makeKing();
+        }
     }
 }

@@ -24,7 +24,6 @@ public class Main extends Application {
         controller.setup();
     }
 
-
     public static void main(String[] args) {
         Application.launch(args);
     }

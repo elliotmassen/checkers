@@ -33,7 +33,7 @@ public class GUI {
     @FXML
     public VBox history;
 
-    private ArrayList<Circle> _pieces;
+    private ArrayList<StackPane> _pieces;
     private ArrayList<Circle> _options;
 
     public void resetPieces() {
@@ -100,7 +100,7 @@ public class GUI {
 
     public void render(ArrayList<PieceState> state, ArrayList<Move> successors, Controller controller) {
         this.resetPieces();
-        this._pieces = new ArrayList<Circle>();
+        this._pieces = new ArrayList<StackPane>();
         this._options = new ArrayList<Circle>();
 
         for(PieceState s: state) {
@@ -115,7 +115,7 @@ public class GUI {
                     colour = Color.rgb(34, 34, 34);
                 }
 
-                Circle pieceButton = this.createPieceButton(s.getX(), s.getY(), colour, controller);
+                StackPane pieceButton = this.createPieceButton(s.getX(), s.getY(), s.isKing(), colour, controller);
                 this.pieces.getChildren().add(pieceButton);
                 this._pieces.add(pieceButton);
             }
@@ -125,11 +125,6 @@ public class GUI {
         HashMap<PieceState, ArrayList<Move>> group = GUI.groupBySharedPath(successors, null);
 
         for(Map.Entry<PieceState, ArrayList<Move>> entry: group.entrySet()) {
-            // We can be confident that each move list contains at least one item and also that if the first is an
-            // end move, then it is the only move in the list
-//            if(entry.getValue().get(0).isEndMove()) {
-//            if(entry.getKey().equals(PieceState.identifyChangedPiece(entry.getValue().get(0).getCurrent(), entry.getValue().get(0).getNext()))) {
-
             PieceState changedPiece = null;
             try {
                 changedPiece = PieceState.identifyChangedPiece(entry.getValue().get(0).getPreviousMove().getCurrent(), entry.getValue().get(0).getPreviousMove().getNext())[1];
@@ -142,17 +137,16 @@ public class GUI {
 
                 Scene scene = this.pieces.getScene();
                 PieceState originalPieceState = this._lookupOriginalPiece(move, scene);
-                Circle changedPieceCircle = (Circle) scene.lookup("#" + originalPieceState.getX() + originalPieceState.getY());
+                StackPane changedPiecePane = (StackPane) scene.lookup("#" + originalPieceState.getX() + originalPieceState.getY());
 
                 // Add origin class to original piece
-                changedPieceCircle.getStyleClass().add("origin");
+                changedPiecePane.getStyleClass().add("origin");
 
                 Circle optionButton = this.createOptionButton(piece.getX(), piece.getY(), PieceState.changesToString(move.getCurrent(), move.getNext()), "" + originalPieceState.getX() + originalPieceState.getY(), move.getNext(), controller);
                 this.pieces.getChildren().add(optionButton);
                 this._options.add(optionButton);
             }
             else {
-                // TODO: Can we be confident that the first element shares the same path origin and the other elements?
                 Move move = entry.getValue().get(0).getPreviousMove();
                 PieceState piece = entry.getKey();
 
@@ -167,19 +161,30 @@ public class GUI {
         }
     }
 
-    public Circle createPieceButton(int x, int y, Color colour, Controller controller) {
+    public StackPane createPieceButton(int x, int y, boolean isKing, Color colour, Controller controller) {
+        StackPane pieceStack = new StackPane();
+
         Circle pieceButton = new Circle();
         pieceButton.setRadius(34);
         pieceButton.setFill(colour);
-        pieceButton.setId(x + "" + y);
-        GridPane.setRowIndex(pieceButton, x);
-        GridPane.setColumnIndex(pieceButton, y);
+
+        pieceStack.getChildren().add(pieceButton);
+
+        if(isKing) {
+            Pane kingMarker = new Pane();
+            kingMarker.getStyleClass().add("king");
+            pieceStack.getChildren().add(kingMarker);
+        }
+
+        pieceStack.setId(x + "" + y);
+        GridPane.setRowIndex(pieceStack, x);
+        GridPane.setColumnIndex(pieceStack, y);
 
         pieceButton.setOnMouseClicked((event -> {
             controller.onPieceClick(event, x, y, this._options);
         }));
 
-        return pieceButton;
+        return pieceStack;
     }
 
     public Circle createOptionButton(int x, int y, String message, String owner, ArrayList<PieceState> newState, Controller controller) {
@@ -289,10 +294,10 @@ public class GUI {
             if (originalPiece == null) {
                 // Attempt to find the board piece
                 PieceState originalPieceState = PieceState.identifyChangedPiece(move.getCurrent(), move.getNext())[0];
-                Circle changedPieceCircle = (Circle) scene.lookup("#" + originalPieceState.getX() + originalPieceState.getY());
+                StackPane changedPiecePane = (StackPane) scene.lookup("#" + originalPieceState.getX() + originalPieceState.getY());
 
                 // If there is no board piece then relinquish control to the above recurse level
-                if(changedPieceCircle == null) {
+                if(changedPiecePane == null) {
                     originalPiece = null;
                 }
                 else {

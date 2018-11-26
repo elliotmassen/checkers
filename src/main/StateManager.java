@@ -96,58 +96,60 @@ public class StateManager {
         int index = 0;
         for(PieceState p: this.getState()) {
             if(index < 12 != turn && p.isActive()) {
-                int x = p.getX();
-                int y = p.getY();
+//                int x = p.getX();
+//                int y = p.getY();
+//
+//                // Top
+//                if (turn || p.isKing()) {
+//                    // Empty adjacent tile
+//                    if (x - 1 >= 0) {
+//                        // Left
+//                        if (y - 1 >= 0) {
+//                            // Top left is empty
+//                            if (grid[x - 1][y - 1] == 0) {
+//                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 1, y - 1, p.isKing())), null));
+//                            }
+//                        }
+//
+//                        // Right
+//                        if (y + 1 < 8) {
+//                            // Bottom left is empty
+//                            if (grid[x - 1][y + 1] == 0) {
+//                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 1, y + 1, p.isKing())), null));
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                // Bottom
+//                if(!turn || p.isKing()) {
+//                    if (x + 1 < 8) {
+//                        // Left
+//                        if (y - 1 >= 0) {
+//                            // Top right is empty
+//                            if (grid[x + 1][y - 1] == 0) {
+//                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 1, y - 1, p.isKing())), null));
+//                            }
+//                        }
+//
+//                        // Right
+//                        if (y + 1 < 8) {
+//                            // Bottom right is empty
+//                            if (grid[x + 1][y + 1] == 0) {
+//                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 1, y + 1, p.isKing())), null));
+//                            }
+//                        }
+//                    }
+//                }
 
-                // Top
-                if (turn || p.isKing()) {
-                    // Empty adjacent tile
-                    if (x - 1 >= 0) {
-                        // Left
-                        if (y - 1 >= 0) {
-                            // Top left is empty
-                            if (grid[x - 1][y - 1] == 0) {
-                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 1, y - 1, p.isKing())), null));
-                            }
-                        }
-
-                        // Right
-                        if (y + 1 < 8) {
-                            // Bottom left is empty
-                            if (grid[x - 1][y + 1] == 0) {
-                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x - 1, y + 1, p.isKing())), null));
-                            }
-                        }
-                    }
-                }
-
-                // Bottom
-                if(!turn || p.isKing()) {
-                    if (x + 1 < 8) {
-                        // Left
-                        if (y - 1 >= 0) {
-                            // Top right is empty
-                            if (grid[x + 1][y - 1] == 0) {
-                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 1, y - 1, p.isKing())), null));
-                            }
-                        }
-
-                        // Right
-                        if (y + 1 < 8) {
-                            // Bottom right is empty
-                            if (grid[x + 1][y + 1] == 0) {
-                                moves.add(new Move(this.getState(), StateManager.createNewState(this.getState(), p, new PieceState(x + 1, y + 1, p.isKing())), null));
-                            }
-                        }
-                    }
-                }
-
+                moves.addAll(this._detectMoves(this.getState(), turn, p, grid));
                 jumps.addAll(this._detectJumps(this.getState(), turn, p, null, null));
             }
 
             index++;
         }
 
+        // TODO: It would be more efficient to detect jumps first and only detect moves if there are no jumps
         // If there are any jumps, in accordance with the rules they should be the only options to the user
         if(jumps.size() > 0) {
             moves = jumps;
@@ -289,11 +291,15 @@ public class StateManager {
             int inbetweenXChange = StateManager._computeInBetweenChange(xChange);
             int inbetweenYChange = StateManager._computeInBetweenChange(yChange);
 
-            // If there is an empty space 2 tiles away and in between is an emeny (aka. a potential jump)
+            // If there is an empty space 2 tiles away and in between is an enemy (aka. a potential jump)
             if(grid[piece.getX() + xChange][piece.getY() + yChange] == 0
                     && enemies.contains(grid[piece.getX() + inbetweenXChange][piece.getY() + inbetweenYChange])) {
+                // Create state in which the piece has jumped
                 PieceState newPiece = new PieceState(piece.getX() + xChange, piece.getY() + yChange, piece.isKing());
+                newPiece.makeKingIfAtBoardEnd(turn);
                 ArrayList<PieceState> nextState = StateManager.createNewState(state, piece, newPiece);
+
+                // Create based on the previous one in which the jumped over piece becomes in active
                 PieceState jumpedOver = this.getPieceByLocation(piece.getX() + inbetweenXChange, piece.getY() + inbetweenYChange);
                 nextState = StateManager.createNewState(nextState, jumpedOver, new PieceState(-1, -1, jumpedOver.isKing()));
 
@@ -309,6 +315,47 @@ public class StateManager {
                     moves.addAll(followingMoves);
                 }
             }
+        }
+
+        return moves;
+    }
+
+    private ArrayList<Move> _detectMoves(ArrayList<PieceState> state, boolean turn, PieceState piece, int[][] grid) {
+        ArrayList<Move> moves = new ArrayList<Move>();
+
+        // Top left
+        moves.addAll(this._detectMoveInDirection(-1, -1, state, turn, piece, grid));
+
+        // Top right
+        moves.addAll(this._detectMoveInDirection(-1, 1, state, turn, piece, grid));
+
+        // Bottom left
+        moves.addAll(this._detectMoveInDirection(1, -1, state, turn, piece, grid));
+
+        // Bottom right
+        moves.addAll(this._detectMoveInDirection(1, 1, state, turn, piece, grid));
+
+        return moves;
+    }
+
+    // An array list is used (even though it'll only be a singular move) to avoid having to do null checking
+    private ArrayList<Move> _detectMoveInDirection(int xChange, int yChange, ArrayList<PieceState> state, boolean turn, PieceState piece, int[][] grid) {
+        ArrayList<Move> moves = new ArrayList<Move>();
+
+        // The piece can move if has permission to move in that direction, the tile is valid and the destination tile is empty
+        boolean hasPermission = piece.isKing() || (xChange == -1 && turn) || (xChange == 1 && !turn);
+        boolean hasPermissionAndTileIsValid = hasPermission
+                && Math.min(0, piece.getX() + xChange) == 0
+                && Math.max(7, piece.getX() + xChange) == 7
+                && Math.min(0, piece.getY() + yChange) == 0
+                && Math.max(7, piece.getY() + yChange) == 7;
+        boolean hasPermissionAndTileIsValidAndTileIsEmpty = hasPermissionAndTileIsValid
+            && grid[piece.getX() + xChange][piece.getY() + yChange] == 0;
+
+        if (hasPermissionAndTileIsValidAndTileIsEmpty) {
+            PieceState newPiece = new PieceState(piece.getX() + xChange, piece.getY() + yChange, piece.isKing());
+            newPiece.makeKingIfAtBoardEnd(turn);
+            moves.add(new Move(state, StateManager.createNewState(state, piece, newPiece), null));
         }
 
         return moves;

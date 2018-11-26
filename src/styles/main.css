@@ -33,7 +33,11 @@
     -fx-cursor: hand;
 }
 
-.pieces .origin {
+.pieces .origin Circle {
     -fx-stroke: rgba(255, 255, 255, 0.9);
     -fx-cursor: hand;
+}
+
+.pieces .king {
+    -fx-background-image: url("king.png");
 }
