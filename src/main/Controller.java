@@ -35,17 +35,29 @@ public class Controller {
 
     public void setup() {
         this._gui.setup();
-        this.updateGUI();
+        this.updateGUI(this._stateManager.getSuccessors(this.getTurn()));
     }
 
-    public void updateState(ArrayList<PieceState> newState) {
+    public void updateState(ArrayList<PieceState> newState, boolean isTurnEnd, ArrayList<Move> successors) {
         this._stateManager.setState(newState);
-        this.endTurn();
-        this.updateGUI();
+
+        if (isTurnEnd) {
+            this.endTurn();
+        }
+
+        if (successors == null) {
+            this.updateGUI(this._stateManager.getSuccessors(this.getTurn()));
+        } else {
+            this.updateGUI(successors);
+        }
     }
 
-    public void updateGUI() {
-        this._gui.render(this._stateManager.getState(), this._stateManager.getSuccessors(this.getTurn()), this);
+    public void updateGUI(ArrayList<Move> successors) {
+        this._gui.render(this._stateManager.getState(), successors, this);
+    }
+
+    public void onSemiOptionClick(MouseEvent event, ArrayList<PieceState> newState, ArrayList<Move> restrictedMoves) {
+        this.updateState(newState, false, restrictedMoves);
     }
 
     public void onOptionClick(MouseEvent event, String message, ArrayList<PieceState> newState) {
@@ -61,7 +73,7 @@ public class Controller {
         this._gui.history.getChildren().add(item);
         item.toBack();
 
-        this.updateState(newState);
+        this.updateState(newState, true, null);
     }
 
     public void onPieceClick(MouseEvent event, int x, int y, ArrayList<Circle> options) {

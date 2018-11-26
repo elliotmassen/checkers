@@ -5,12 +5,15 @@ import java.util.ArrayList;
 public class Move {
     private ArrayList<PieceState> _current;
     private ArrayList<PieceState> _next;
-    private Move _followingMove;
+    private Move _previousMove;
+    private boolean _isEndMove;
 
-    public Move(ArrayList<PieceState> current, ArrayList<PieceState> next, Move followingMove) {
+    public Move(ArrayList<PieceState> current, ArrayList<PieceState> next, Move previousMove) {
         this._current = current;
         this._next = next;
-        this._followingMove = followingMove;
+        this._previousMove = previousMove;
+
+        this.setIsEndMove(false);
     }
 
     public ArrayList<PieceState> getCurrent() {
@@ -21,22 +24,19 @@ public class Move {
         return this._next;
     }
 
-    public Move getFollowingMove() {
-        return this._followingMove;
+    public Move getPreviousMove() { return this._previousMove; }
+
+    public boolean isEndMove() { return this._isEndMove; }
+
+    public void setIsEndMove(boolean isEndMove) {
+        this._isEndMove = isEndMove;
     }
 
-    public ArrayList<Move> getAllMoves() {
-        ArrayList<Move> allMoves = new ArrayList<Move>();
-
-        if(this.getFollowingMove() != null) {
-            allMoves.add(this.getFollowingMove());
-            allMoves.addAll(this.getFollowingMove().getAllMoves());
-        }
-
-        return allMoves;
+    public Move getFirstMove() {
+        return this.getPreviousMove() == null ? this : this.getPreviousMove().getFirstMove();
     }
 
-    public ArrayList<PieceState> getFinalState() {
-        return this.getFollowingMove() != null ? this.getFollowingMove().getFinalState() : this.getNext();
+    public Move clone() {
+        return new Move(this._current, this._next, this._previousMove);
     }
 }
