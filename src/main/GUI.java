@@ -20,7 +20,16 @@ import java.util.Map;
 
 public class GUI {
     @FXML
-    public ToolBar toolbar;
+    public Button newGameButton;
+
+    @FXML
+    public Button undoButton;
+
+    @FXML
+    public Button difficultyButton;
+
+    @FXML
+    public Button rulesButton;
 
     @FXML
     public GridPane pieces;
@@ -50,14 +59,13 @@ public class GUI {
         this.history.getStyleClass().add("history");
         this.history.getChildren().add(this.createHistoryItem(Controller.Type.INFO, "Game started!", state, controller));
 
-        // Add items to toolbar
-        this.toolbar.getItems().addAll(new ArrayList<Node>() {{
-            add(new Button("New game"));
-            add(new Button("Undo"));
-            add(new Button("Difficulty"));
-            add(new Button("Show hints"));
-            add(new Button("Rules"));
-        }});
+        this.undoButton.setOnAction(e -> {
+            if(controller.canUndo()) {
+                controller.undo(true);
+                this._removeHistoryItems(1);
+            }
+        });
+        this.undoButton.setDisable(!controller.canUndo());
 
         // Add checkers and pieces
         this.pieces.getStyleClass().add("pieces");
@@ -157,6 +165,8 @@ public class GUI {
                 this._options.add(optionButton);
             }
         }
+
+        this.undoButton.setDisable(!controller.canUndo());
     }
 
     public StackPane createPieceButton(int x, int y, boolean isKing, Color colour, Controller controller) {
@@ -297,9 +307,8 @@ public class GUI {
 
     public void onHistoryItemClick(MouseEvent event, State state, Controller controller) {
         if (state != null) {
-            controller.undoStateTo(state);
-
-            while(this.history.getChildren().remove(0) != (HBox) ((Pane) event.getTarget()).getParent()) {}
+            int numToRemove = controller.undoStateTo(state);
+            this._removeHistoryItems(numToRemove);
         }
     }
 
@@ -368,5 +377,11 @@ public class GUI {
         }
 
         return originalPiece;
+    }
+
+    private void _removeHistoryItems(int numToRemove) {
+        for(int i = 0; i < numToRemove; i++) {
+            this.history.getChildren().remove(0);
+        }
     }
 }

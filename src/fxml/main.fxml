@@ -5,8 +5,14 @@
 
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Button?>
 <VBox xmlns:fx="http://javafx.com/fxml" fx:id="root">
-    <ToolBar fx:id="toolbar"></ToolBar>
+    <ToolBar>
+        <Button fx:id="newGameButton">New game</Button>
+        <Button fx:id="undoButton">Undo</Button>
+        <Button fx:id="difficultyButton">Difficulty</Button>
+        <Button fx:id="rulesButton">Rules</Button>
+    </ToolBar>
     <HBox fx:id="content">
         <StackPane fx:id="board">
             <GridPane fx:id="checkers"></GridPane>

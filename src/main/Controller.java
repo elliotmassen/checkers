@@ -1,6 +1,7 @@
 package main;
 
 import java.util.ArrayList;
+import java.util.EmptyStackException;
 import java.util.Stack;
 
 public class Controller {
@@ -51,15 +52,39 @@ public class Controller {
         this._history.add(state);
     }
 
-    public void undoStateTo(State state) {
-        boolean removed = false;
-        while(!removed) {
-            State popped = this._history.pop();
-            removed = popped == state;
-            System.out.println(popped + ", " + state);
+    public boolean canUndo() {
+        // The history must be 2 or more, as we never want to remove the initial state
+        return this._history.size() > 1;
+    }
+
+    public State undo(boolean shouldUpdateGUI) {
+        State undoneState = null;
+
+        if(this.canUndo()) {
+            undoneState = this._history.pop();
+
+            if (shouldUpdateGUI) {
+                this.updateState(this._history.peek(), null, false);
+            }
         }
 
+        return undoneState;
+    }
+
+    public int undoStateTo(State state) {
+        boolean removed = false;
+        State popped = null;
+        int count = 0;
+
+        do {
+            popped = this.undo(false);
+            removed = popped == state;
+            count++;
+        } while(!removed && popped != null);
+
         this.updateState(this._history.peek(), null, false);
+
+        return count;
     }
 
     private void _updateGUI(ArrayList<Move> successors) {
