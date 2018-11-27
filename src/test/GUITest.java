@@ -15,7 +15,7 @@ class GUITest {
         StateManager stateManager = new StateManager(StateManager.createTestState());
 
         // moves = {[1, 0], [1, 4], [1, 2]}, each has pointers to previous moves. This is tested in StateManagerTest
-        ArrayList<Move> moves = stateManager.getSuccessors();
+        ArrayList<Move> moves = stateManager.getState().getSuccessors();
 
         // As move 3 and 4 share a common ancestor semiMove, their pointers should reference the same object
         assertEquals(moves.get(0).getPreviousMove(), moves.get(1).getPreviousMove());

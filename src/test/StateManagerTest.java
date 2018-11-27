@@ -26,12 +26,12 @@ class StateManagerTest {
     }
 
     @Test
-    public void testStateManagerGetPieceByLocation() {
+    public void testStateGetPieceByLocation() {
         // If there is no piece at the location, null should be returned
-        assertNull(this._stateManager.getPieceByLocation(3, 0));
+        assertNull(this._stateManager.getState().getPieceByLocation(3, 0));
 
         // If there is a piece at the location, the PieceState should be returned
-        assertThat(this._stateManager.getPieceByLocation(5, 0), instanceOf(PieceState.class));
+        assertThat(this._stateManager.getState().getPieceByLocation(5, 0), instanceOf(PieceState.class));
     }
 
     @Test
@@ -103,7 +103,7 @@ class StateManagerTest {
 
         // Expect moves to: [4, 1], [4, 1], [4, 3], [4, 3], [4, 5], [4, 5], [4, 7]
         int expectedNumOfMoves = 7;
-        ArrayList<Move> moves = this._stateManager.getSuccessors();
+        ArrayList<Move> moves = this._stateManager.getState().getSuccessors();
         assertEquals(expectedNumOfMoves, moves.size());
 
         int[][] expectedMoves = new int[][]{
@@ -134,7 +134,7 @@ class StateManagerTest {
     public void testStateManagerGetSuccessorsWithJumps() {
         // Expect moves to: [1, 2], [1, 0], [1, 4]
         int expectedNumOfMoves = 3;
-        ArrayList<Move> moves = this._stateManager.getSuccessors();
+        ArrayList<Move> moves = this._stateManager.getState().getSuccessors();
         assertEquals(expectedNumOfMoves, moves.size());
 
         int[][] expectedMoves = new int[][]{

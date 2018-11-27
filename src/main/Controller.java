@@ -3,6 +3,7 @@ package main;
 import java.util.ArrayList;
 import java.util.EmptyStackException;
 import java.util.Stack;
+import java.util.concurrent.TimeUnit;
 
 public class Controller {
     private GUI _gui;
@@ -24,7 +25,7 @@ public class Controller {
     }
 
     public void setup() {
-        State initialState = StateManager.createTestState();
+        State initialState = StateManager.createInitialState();
         this._gui.setup(initialState, this);
         this._addToHistory(initialState);
         this.updateState(initialState, null, false);
@@ -40,16 +41,87 @@ public class Controller {
         }
 
         if(successors == null) {
-            successors = this._stateManager.getSuccessors();
+            successors = this._stateManager.getState().getSuccessors();
         }
 
         this._gameOver = false;
-        if(this._stateManager.isGoalState(!this._stateManager.getState().getTurn(), successors)) {
+        if(this._stateManager.getState().isGoalState(!this._stateManager.getState().getTurn(), successors)) {
             this._gui.gameOver(this._stateManager.getState(), previousState, this);
             this._gameOver = true;
         }
 
         this._updateGUI(successors);
+
+        // Make AI move
+        if(!this._stateManager.getState().getTurn() && !this.isGameOver()) {
+            try {
+                TimeUnit.SECONDS.sleep((long) 0.3);
+            }
+            catch(Exception e) {}
+
+            // Pick move to make
+            Move optimalAIMove = this._getAIMove();
+
+            // Make move
+            this.updateState(optimalAIMove.getNext(), null, true);
+        }
+    }
+
+    private Move _getAIMove() {
+        ArrayList<Move> optimalMoves = new ArrayList<Move>();
+        this._minimax(this._stateManager.getState(), 5, optimalMoves);
+
+        return optimalMoves.get(0);
+    }
+
+    private int _minimax(State state, int depth, ArrayList<Move> optimalMoves) {
+        ArrayList<Move> successors = state.getSuccessors();
+
+        if(depth == 0 || successors.isEmpty()) {
+            return StateManager.getStateValue(state);
+        }
+        else if(state.getTurn()) {
+            // Human
+            int bestValue = Integer.MIN_VALUE;
+
+            for(Move m: successors) {
+                int eval = this._minimax(m.getNext(), --depth, null);
+
+                if(eval > bestValue) {
+                    if(optimalMoves != null) {
+                        optimalMoves.clear();
+                        optimalMoves.add(m);
+                    }
+
+                    return eval;
+                }
+                else {
+                    return bestValue;
+                }
+            }
+        }
+        else {
+            // AI
+            int bestValue = Integer.MAX_VALUE;
+
+            for(Move m: successors) {
+                int eval = this._minimax(m.getNext(), --depth, null);
+
+                if(eval < bestValue) {
+                    if(optimalMoves != null) {
+                        optimalMoves.clear();
+                        optimalMoves.add(m);
+                    }
+
+                    return eval;
+                }
+                else {
+                    return bestValue;
+                }
+            }
+        }
+
+        return 0;
     }
 
     private void _addToHistory(State state) {
