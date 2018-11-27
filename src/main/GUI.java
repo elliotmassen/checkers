@@ -7,6 +7,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ToolBar;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -139,8 +140,7 @@ public class GUI {
                 // Add origin class to original piece
                 changedPiecePane.getStyleClass().add("origin");
 
-                String message = PieceState.changesToString(move.getFirstMove().getCurrent().getPieces(), move.getNext().getPieces());
-                Circle optionButton = this.createOptionButton(piece.getX(), piece.getY(), message, "" + originalPieceState.getX() + originalPieceState.getY(), move.getFirstMove().getCurrent(), move.getNext(), controller);
+                Circle optionButton = this.createOptionButton(piece.getX(), piece.getY(), "" + originalPieceState.getX() + originalPieceState.getY(), move.getFirstMove().getCurrent(), move.getNext(), controller);
                 this.pieces.getChildren().add(optionButton);
                 this._options.add(optionButton);
             }
@@ -179,13 +179,13 @@ public class GUI {
         GridPane.setColumnIndex(pieceStack, y);
 
         pieceStack.setOnMouseClicked((event -> {
-            controller.onPieceClick(event, x, y, this._options);
+            this.onPieceClick(x, y);
         }));
 
         return pieceStack;
     }
 
-    public Circle createOptionButton(int x, int y, String message, String owner, State state, State newState, Controller controller) {
+    public Circle createOptionButton(int x, int y, String owner, State state, State newState, Controller controller) {
         Circle pieceButton = new Circle();
         pieceButton.setRadius(34);
         pieceButton.setFill(Color.TRANSPARENT);
@@ -195,7 +195,7 @@ public class GUI {
         GridPane.setColumnIndex(pieceButton, y);
 
         pieceButton.setOnMouseClicked((event -> {
-            controller.onOptionClick(event, message, state, newState);
+            controller.updateState(newState, null, true);
         }));
 
         return pieceButton;
@@ -211,7 +211,7 @@ public class GUI {
         GridPane.setColumnIndex(pieceButton, y);
 
         pieceButton.setOnMouseClicked(event -> {
-            controller.onSemiOptionClick(event, newState, restrictedMoves);
+            controller.updateState(newState, restrictedMoves, false);
         });
 
         return pieceButton;
@@ -244,7 +244,7 @@ public class GUI {
             rewindButton.getStyleClass().add("rewind");
 
             rewindButton.setOnMouseClicked(event -> {
-                controller.onHistoryItemClick(event, state);
+                this.onHistoryItemClick(event, state, controller);
             });
 
             item.getChildren().add(rewindButton);
@@ -252,6 +252,55 @@ public class GUI {
         }
 
         return item;
+    }
+
+    public void endOfTurn(State newState, State previousState, Controller controller) {
+        String message = PieceState.changesToString(previousState.getPieces(), newState.getPieces());
+
+        Controller.Type type;
+        if(previousState.getTurn()) {
+            type = Controller.Type.BLACK;
+        }
+        else {
+            type = Controller.Type.RED;
+        }
+
+        HBox item = this.createHistoryItem(type, message, newState, controller);
+        this.history.getChildren().add(item);
+        item.toBack();
+    }
+
+    public void gameOver(State winningState, State previousState, Controller controller) {
+        Controller.Type type;
+        if(!winningState.getTurn()) {
+            type = Controller.Type.BLACK;
+        }
+        else {
+            type = Controller.Type.RED;
+        }
+
+        HBox gameoverItem = this.createHistoryItem(type, "won the game!", previousState, controller);
+        this.history.getChildren().add(gameoverItem);
+        gameoverItem.toBack();
+    }
+
+    public void onPieceClick(int x, int y) {
+        this._options.forEach((Circle c) -> { c.getStyleClass().remove("option--visible"); });
+
+        // TODO: Is there a nice filter function available for this?
+        this._options.forEach((Circle c) -> {
+            if(c.getStyleClass().contains("" + x + y)) {
+                c.getStyleClass().add("option--visible");
+            }
+        });
+    }
+
+    public void onHistoryItemClick(MouseEvent event, State state, Controller controller) {
+        if (state != null) {
+            controller.undoStateTo(state);
+
+            while(this.history.getChildren().remove(0) != (HBox) ((Pane) event.getTarget()).getParent()) {}
+        }
     }
 
     public static HashMap<PieceState, ArrayList<Move>> groupBySharedPath(ArrayList<Move> moves, Move previousMove) {

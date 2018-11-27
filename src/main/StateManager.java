@@ -6,6 +6,10 @@ import java.util.HashSet;
 public class StateManager {
     private State _state;
 
+    public StateManager() {
+        this.setState(null);
+    }
+
     public StateManager(State state) {
         this.setState(state);
     }
