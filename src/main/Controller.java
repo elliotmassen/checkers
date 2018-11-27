@@ -8,6 +8,7 @@ public class Controller {
     private GUI _gui;
     private StateManager _stateManager;
     private Stack<State> _history;
+    private boolean _gameOver;
 
     public enum Type {
         RED,
@@ -19,10 +20,11 @@ public class Controller {
         this._gui = gui;
         this._stateManager = stateManager;
         this._history = new Stack<State>();
+        this._gameOver = false;
     }
 
     public void setup() {
-        State initialState = StateManager.createInitialState();
+        State initialState = StateManager.createTestState();
         this._gui.setup(initialState, this);
         this._addToHistory(initialState);
         this.updateState(initialState, null, false);
@@ -41,8 +43,10 @@ public class Controller {
             successors = this._stateManager.getSuccessors();
         }
 
+        this._gameOver = false;
         if(this._stateManager.isGoalState(!this._stateManager.getState().getTurn(), successors)) {
             this._gui.gameOver(this._stateManager.getState(), previousState, this);
+            this._gameOver = true;
         }
 
         this._updateGUI(successors);
@@ -50,6 +54,10 @@ public class Controller {
 
     private void _addToHistory(State state) {
         this._history.add(state);
+    }
+
+    public boolean isGameOver() {
+        return this._gameOver;
     }
 
     public boolean canUndo() {

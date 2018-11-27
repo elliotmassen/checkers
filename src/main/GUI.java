@@ -61,8 +61,17 @@ public class GUI {
 
         this.undoButton.setOnAction(e -> {
             if(controller.canUndo()) {
+                boolean gameOver = controller.isGameOver();
+
                 controller.undo(true);
-                this._removeHistoryItems(1);
+
+                // If the game is over, then we've added an extra history item which will need to also go
+                if(gameOver) {
+                    this._removeHistoryItems(2);
+                }
+                else {
+                    this._removeHistoryItems(1);
+                }
             }
         });
         this.undoButton.setDisable(!controller.canUndo());
@@ -281,15 +290,17 @@ public class GUI {
     }
 
     public void gameOver(State winningState, State previousState, Controller controller) {
-        Controller.Type type;
+        String message;
         if(!winningState.getTurn()) {
-            type = Controller.Type.BLACK;
+            message = "Black";
         }
         else {
-            type = Controller.Type.RED;
+            message = "Red";
         }
 
-        HBox gameoverItem = this.createHistoryItem(type, "won the game!", previousState, controller);
+        message += " won the game!";
+
+        HBox gameoverItem = this.createHistoryItem(Controller.Type.INFO, message, previousState, controller);
         this.history.getChildren().add(gameoverItem);
         gameoverItem.toBack();
     }
@@ -307,7 +318,15 @@ public class GUI {
 
     public void onHistoryItemClick(MouseEvent event, State state, Controller controller) {
         if (state != null) {
+            boolean gameOver = controller.isGameOver();
+
             int numToRemove = controller.undoStateTo(state);
+
+            // If the game is over, then we've added an extra history item which will need to also go
+            if(gameOver) {
+                numToRemove++;
+            }
+
             this._removeHistoryItems(numToRemove);
         }
     }
