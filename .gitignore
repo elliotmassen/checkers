@@ -2,7 +2,6 @@
 /.idea/
 
 *.class
-*.iml
 *.jar
 *.war
 *.ear
