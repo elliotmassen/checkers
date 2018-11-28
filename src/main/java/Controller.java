@@ -97,59 +97,49 @@ public class Controller {
         }
 
         this._evaluations = 0;
-        this._minimax(this._stateManager.getState(), depth, optimalMoves);
+        this._minimax(this._stateManager.getState(), depth, Integer.MIN_VALUE, Integer.MAX_VALUE, optimalMoves);
         this._gui.setEvaluations(this._evaluations);
 
         return optimalMoves.get(0);
     }
 
-    private int _minimax(State state, int depth, ArrayList<Move> optimalMoves) {
+    private int _minimax(State state, int depth, int alpha, int beta, ArrayList<Move> optimalMoves) {
         ArrayList<Move> successors = state.getSuccessors();
 
         if(depth < 1 || successors.isEmpty()) {
             this._evaluations++;
             return StateManager.getStateValue(state);
         }
-        else if(state.getTurn()) {
-            // Human
-            int bestValue = Integer.MIN_VALUE;
 
-            for(Move m: successors) {
-                int eval = this._minimax(m.getNext(), depth-1, null);
+        // Human
+        int bestValue = state.getTurn() ? Integer.MIN_VALUE : Integer.MAX_VALUE;
 
-                this._evaluations++;
-                if(eval > bestValue) {
-                    if(optimalMoves != null) {
-                        optimalMoves.clear();
-                        optimalMoves.add(m);
-                    }
+        for(Move m: successors) {
+            int eval = this._minimax(m.getNext(), depth-1, alpha, beta, null);
 
-                    bestValue = eval;
+            this._evaluations++;
+            if((state.getTurn() && eval > bestValue) || (!state.getTurn() && eval < bestValue)) {
+                if(optimalMoves != null) {
+                    optimalMoves.clear();
+                    optimalMoves.add(m);
                 }
+
+                bestValue = eval;
             }
 
-            return bestValue;
-        }
-        else {
-            // AI
-            int bestValue = Integer.MAX_VALUE;
-
-            for(Move m: successors) {
-                int eval = this._minimax(m.getNext(), depth-1, null);
-
-                this._evaluations++;
-                if(eval < bestValue) {
-                    if(optimalMoves != null) {
-                        optimalMoves.clear();
-                        optimalMoves.add(m);
-                    }
-
-                    bestValue = eval;
-                }
+            if(state.getTurn()) {
+                alpha = Math.max(alpha, bestValue);
+            }
+            else {
+                beta = Math.min(beta, bestValue);
             }
 
-            return bestValue;
+            if(alpha >= beta) {
+                break;
+            }
         }
+
+        return bestValue;
     }
 
     private void _addToHistory(State state) {
