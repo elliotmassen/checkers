@@ -19,7 +19,7 @@ public class Main extends Application {
 
         StateManager stateManager = new StateManager();
         Controller controller = new Controller(gui, stateManager);
-        controller.setup();
+        controller.setup(false);
     }
 
     public static void main(String[] args) {

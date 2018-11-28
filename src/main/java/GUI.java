@@ -54,85 +54,94 @@ public class GUI {
         this.pieces.getChildren().clear();
     }
 
-    public void setup(State state, Controller controller) {
+    public void resetHistory() {
+        this.history.getChildren().clear();
+    }
+
+    public void setup(State state, boolean reset, Controller controller) {
         this.resetPieces();
+        this.resetHistory();
 
-        HBox.setHgrow(this.historyScroll, Priority.ALWAYS);
-        this.historyScroll.setFitToWidth(true);
-        this.historyScroll.setFitToHeight(true);
-        this.historyScroll.setMaxHeight(696);
-        this.history.getStyleClass().add("history");
-        this.history.getChildren().add(this.createHistoryItem(Controller.Type.INFO, "Game started!", state, controller));
-
-        this.undoButton.setOnAction(e -> {
-            if(controller.canUndo()) {
-                boolean gameOver = controller.isGameOver();
-
-                controller.undo(true);
-
-                // If the game is over, then we've added an extra history item which will need to also go
-                if(gameOver) {
-                    this._removeHistoryItems(2);
-                }
-                else {
-                    this._removeHistoryItems(1);
-                }
-            }
-        });
-        this.undoButton.setDisable(!controller.canUndo());
-
-        this._manageDifficultyButtons(controller);
-        this.difficultyEasyButton.setOnAction(e -> {
-            controller.setDifficulty(0);
-            this._manageDifficultyButtons(controller);
-        });
-
-        this.difficultyMediumButton.setOnAction(e -> {
-            controller.setDifficulty(1);
-            this._manageDifficultyButtons(controller);
-        });
-
-        this.difficultyHardButton.setOnAction(e -> {
-            controller.setDifficulty(2);
-            this._manageDifficultyButtons(controller);
-        });
-
-        // Add checkers and pieces
-        this.pieces.getStyleClass().add("pieces");
-        this.pieces.setHgap(17);
-        this.pieces.setVgap(17);
-
-        for(int i = 0; i < 8; i++) {
-            ColumnConstraints piecesColumnConstraint = new ColumnConstraints();
-            piecesColumnConstraint.setPercentWidth(12.5);
-            this.pieces.getColumnConstraints().add(piecesColumnConstraint);
-
-            RowConstraints piecesRowConstraint = new RowConstraints();
-            piecesRowConstraint.setPercentHeight(12.5);
-            this.pieces.getRowConstraints().add(piecesRowConstraint);
+        if(!reset) {
+            HBox.setHgrow(this.historyScroll, Priority.ALWAYS);
+            this.historyScroll.setFitToWidth(true);
+            this.historyScroll.setFitToHeight(true);
+            this.historyScroll.setMaxHeight(696);
+            this.history.getStyleClass().add("history");
         }
 
-        for(int i = 0; i < 8; i++) {
-            for(int j = 0; j < 8; j++) {
-                // Add checker
-                Rectangle square = new Rectangle();
-                square.setWidth(87);
-                square.setHeight(87);
-                GridPane.setRowIndex(square, i);
-                GridPane.setColumnIndex(square, j);
+        this.history.getChildren().add(this.createHistoryItem(Controller.Type.INFO, "Game started!", state, controller));
 
-                if((i + j) % 2 == 0) {
-                    square.setFill(Color.rgb(34, 47, 62));
-                }
-                else {
-                    square.setFill(Color.rgb(87, 101, 116));
-                }
+        if(!reset) {
+            this.newGameButton.setOnAction(e -> {
+                controller.setup(true);
+            });
 
-                this.checkers.getChildren().add(square);
+            this.undoButton.setOnAction(e -> {
+                if (controller.canUndo()) {
+                    boolean gameOver = controller.isGameOver();
+
+                    controller.undo(true);
+
+                    // If the game is over, then we've added an extra history item which will need to also go
+                    if (gameOver) {
+                        this._removeHistoryItems(2);
+                    } else {
+                        this._removeHistoryItems(1);
+                    }
+                }
+            });
+            this.undoButton.setDisable(!controller.canUndo());
+
+            this._manageDifficultyButtons(controller);
+            this.difficultyEasyButton.setOnAction(e -> {
+                controller.setDifficulty(0);
+                this._manageDifficultyButtons(controller);
+            });
+
+            this.difficultyMediumButton.setOnAction(e -> {
+                controller.setDifficulty(1);
+                this._manageDifficultyButtons(controller);
+            });
+
+            this.difficultyHardButton.setOnAction(e -> {
+                controller.setDifficulty(2);
+                this._manageDifficultyButtons(controller);
+            });
+
+            // Add checkers and pieces
+            this.pieces.getStyleClass().add("pieces");
+            this.pieces.setHgap(17);
+            this.pieces.setVgap(17);
+
+            for (int i = 0; i < 8; i++) {
+                ColumnConstraints piecesColumnConstraint = new ColumnConstraints();
+                piecesColumnConstraint.setPercentWidth(12.5);
+                this.pieces.getColumnConstraints().add(piecesColumnConstraint);
+
+                RowConstraints piecesRowConstraint = new RowConstraints();
+                piecesRowConstraint.setPercentHeight(12.5);
+                this.pieces.getRowConstraints().add(piecesRowConstraint);
             }
 
-            // Add class to history pane
-            this.history.getStyleClass().add("history");
+            for (int i = 0; i < 8; i++) {
+                for (int j = 0; j < 8; j++) {
+                    // Add checker
+                    Rectangle square = new Rectangle();
+                    square.setWidth(87);
+                    square.setHeight(87);
+                    GridPane.setRowIndex(square, i);
+                    GridPane.setColumnIndex(square, j);
+
+                    if ((i + j) % 2 == 0) {
+                        square.setFill(Color.rgb(34, 47, 62));
+                    } else {
+                        square.setFill(Color.rgb(87, 101, 116));
+                    }
+
+                    this.checkers.getChildren().add(square);
+                }
+            }
         }
     }
 
