@@ -169,4 +169,25 @@ class StateManagerTest {
         assertEquals(3, piece.getX());
         assertEquals(0, piece.getY());
     }
+
+    @Test
+    public void testGetStateValue() {
+        // Test state value should be 0
+        assertEquals(0, StateManager.getStateValue(this._stateManager.getState()));
+
+        PieceState enemyPiece0 = this._stateManager.getState().getPieces().get(9);
+        PieceState enemyPiece1 = this._stateManager.getState().getPieces().get(10);
+        PieceState enemyPiece2 = this._stateManager.getState().getPieces().get(11);
+
+        // Forcibly remove enemy pieces and then end turn
+        State endState = StateManager.createNewState(this._stateManager.getState(), enemyPiece0, new PieceState(-1, -1, false), false);
+        endState = StateManager.createNewState(endState, enemyPiece1, new PieceState(-1, -1, false), false);
+        endState = StateManager.createNewState(endState, enemyPiece2, new PieceState(-1, -1, false), true);
+
+        // End state *is* the end state
+        assertTrue(endState.isGoalState(true, new ArrayList<Move>()));
+
+        // End state should be 1 (human player has won)
+        assertEquals(1, StateManager.getStateValue(endState));
+    }
 }

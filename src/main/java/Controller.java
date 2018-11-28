@@ -22,11 +22,11 @@ public class Controller {
         this._stateManager = stateManager;
         this._history = new Stack<State>();
         this._gameOver = false;
-        this._difficulty = 2;
+        this._difficulty = 1;
     }
 
     public void setup() {
-        State initialState = StateManager.createInitialState();
+        State initialState = StateManager.createTestState();
         this._gui.setup(initialState, this);
         this._addToHistory(initialState);
         this.updateState(initialState, null, false);

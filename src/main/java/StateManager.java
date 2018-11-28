@@ -145,8 +145,8 @@ public class StateManager {
     public static int getStateValue(State state) {
         int value = 0;
 
-        if(state.isGoalState(state.getTurn(), state.getSuccessors())) {
-            if(state.getTurn()) {
+        if(state.isGoalState(!state.getTurn(), state.getSuccessors())) {
+            if(!state.getTurn()) {
                 value = 1;
             }
             else {
