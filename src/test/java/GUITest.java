@@ -1,7 +1,3 @@
-import main.GUI;
-import main.Move;
-import main.PieceState;
-import main.StateManager;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;

@@ -1,5 +1,6 @@
 /out/
 /.idea/
+/target/
 
 *.class
 *.jar
