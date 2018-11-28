@@ -37,7 +37,7 @@ public class Controller {
     public void setup(boolean reset) {
         this._history = new Stack<State>();
         this._gameOver = false;
-        State initialState = StateManager.createTestState();
+        State initialState = StateManager.createInitialState();
         this._gui.setup(initialState, reset, this);
         this._addToHistory(initialState);
         this.updateState(initialState, null, false);
