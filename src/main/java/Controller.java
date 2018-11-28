@@ -82,19 +82,7 @@ public class Controller {
     private Move _getAIMove() {
         ArrayList<Move> optimalMoves = new ArrayList<Move>();
 
-        int depth;
-        if(this.getDifficulty() == 0) {
-            // Easy
-            depth = 3;
-        }
-        else if(this.getDifficulty() == 1) {
-            // Medium
-            depth = 5;
-        }
-        else {
-            // Hard
-            depth = 7;
-        }
+        int depth = (this.getDifficulty() * 2) + 3;
 
         this._evaluations = 0;
         this._minimax(this._stateManager.getState(), depth, Integer.MIN_VALUE, Integer.MAX_VALUE, optimalMoves);
