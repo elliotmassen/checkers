@@ -10,6 +10,8 @@ public class Controller {
     private StateManager _stateManager;
     private Stack<State> _history;
     private boolean _gameOver;
+    private int _difficulty;
+    private int _evaluations;
 
     public enum Type {
         RED,
@@ -22,10 +24,11 @@ public class Controller {
         this._stateManager = stateManager;
         this._history = new Stack<State>();
         this._gameOver = false;
+        this._difficulty = 2;
     }
 
     public void setup() {
-        State initialState = StateManager.createInitialState();
+        State initialState = StateManager.createTestState();
         this._gui.setup(initialState, this);
         this._addToHistory(initialState);
         this.updateState(initialState, null, false);
@@ -54,22 +57,50 @@ public class Controller {
 
         // Make AI move
         if(!this._stateManager.getState().getTurn() && !this.isGameOver()) {
-            try {
-                TimeUnit.SECONDS.sleep((long) 0.3);
-            }
-            catch(Exception e) {}
-
             // Pick move to make
             Move optimalAIMove = this._getAIMove();
+
+            if(this._evaluations < 1000) {
+                try {
+                    TimeUnit.SECONDS.sleep((long) 0.3);
+                }
+                catch (Exception e) {
+                }
+            }
 
             // Make move
             this.updateState(optimalAIMove.getNext(), null, true);
         }
     }
 
+    public int getDifficulty() {
+        return this._difficulty;
+    }
+
+    public void setDifficulty(int level) {
+        this._difficulty = level;
+    }
+
     private Move _getAIMove() {
         ArrayList<Move> optimalMoves = new ArrayList<Move>();
-        this._minimax(this._stateManager.getState(), 5, optimalMoves);
+
+        int depth;
+        if(this.getDifficulty() == 0) {
+            // Easy
+            depth = 3;
+        }
+        else if(this.getDifficulty() == 1) {
+            // Medium
+            depth = 5;
+        }
+        else {
+            // Hard
+            depth = 7;
+        }
+
+        this._evaluations = 0;
+        this._minimax(this._stateManager.getState(), depth, optimalMoves);
+        this._gui.setEvaluations(this._evaluations);
 
         return optimalMoves.get(0);
     }
@@ -77,7 +108,8 @@ public class Controller {
     private int _minimax(State state, int depth, ArrayList<Move> optimalMoves) {
         ArrayList<Move> successors = state.getSuccessors();
 
-        if(depth == 0 || successors.isEmpty()) {
+        if(depth < 1 || successors.isEmpty()) {
+            this._evaluations++;
             return StateManager.getStateValue(state);
         }
         else if(state.getTurn()) {
@@ -85,43 +117,41 @@ public class Controller {
             int bestValue = Integer.MIN_VALUE;
 
             for(Move m: successors) {
-                int eval = this._minimax(m.getNext(), --depth, null);
+                int eval = this._minimax(m.getNext(), depth-1, null);
 
+                this._evaluations++;
                 if(eval > bestValue) {
                     if(optimalMoves != null) {
                         optimalMoves.clear();
                         optimalMoves.add(m);
                     }
 
-                    return eval;
-                }
-                else {
-                    return bestValue;
+                    bestValue = eval;
                 }
             }
+
+            return bestValue;
         }
         else {
             // AI
             int bestValue = Integer.MAX_VALUE;
 
             for(Move m: successors) {
-                int eval = this._minimax(m.getNext(), --depth, null);
+                int eval = this._minimax(m.getNext(), depth-1, null);
 
+                this._evaluations++;
                 if(eval < bestValue) {
                     if(optimalMoves != null) {
                         optimalMoves.clear();
                         optimalMoves.add(m);
                     }
 
-                    return eval;
-                }
-                else {
-                    return bestValue;
+                    bestValue = eval;
                 }
             }
-        }
 
-        return 0;
+            return bestValue;
+        }
     }
 
     private void _addToHistory(State state) {

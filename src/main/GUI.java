@@ -4,9 +4,7 @@ import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.ToolBar;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -26,10 +24,19 @@ public class GUI {
     public Button undoButton;
 
     @FXML
-    public Button difficultyButton;
+    public MenuItem difficultyEasyButton;
+
+    @FXML
+    public MenuItem difficultyMediumButton;
+
+    @FXML
+    public MenuItem difficultyHardButton;
 
     @FXML
     public Button rulesButton;
+
+    @FXML
+    public Text evaluations;
 
     @FXML
     public GridPane pieces;
@@ -75,6 +82,22 @@ public class GUI {
             }
         });
         this.undoButton.setDisable(!controller.canUndo());
+
+        this._manageDifficultyButtons(controller);
+        this.difficultyEasyButton.setOnAction(e -> {
+            controller.setDifficulty(0);
+            this._manageDifficultyButtons(controller);
+        });
+
+        this.difficultyMediumButton.setOnAction(e -> {
+            controller.setDifficulty(1);
+            this._manageDifficultyButtons(controller);
+        });
+
+        this.difficultyHardButton.setOnAction(e -> {
+            controller.setDifficulty(2);
+            this._manageDifficultyButtons(controller);
+        });
 
         // Add checkers and pieces
         this.pieces.getStyleClass().add("pieces");
@@ -331,6 +354,10 @@ public class GUI {
         }
     }
 
+    public void setEvaluations(int num) {
+        this.evaluations.setText("Evaluations: " + num);
+    }
+
     public static HashMap<PieceState, ArrayList<Move>> groupBySharedPath(ArrayList<Move> moves, Move previousMove) {
         HashMap<PieceState, ArrayList<Move>> group = new HashMap<PieceState, ArrayList<Move>>();
 
@@ -402,5 +429,11 @@ public class GUI {
         for(int i = 0; i < numToRemove; i++) {
             this.history.getChildren().remove(0);
         }
+    }
+
+    private void _manageDifficultyButtons(Controller controller) {
+        this.difficultyEasyButton.setDisable(controller.getDifficulty() == 0);
+        this.difficultyMediumButton.setDisable(controller.getDifficulty() == 1);
+        this.difficultyHardButton.setDisable(controller.getDifficulty() == 2);
     }
 }

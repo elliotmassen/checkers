@@ -6,12 +6,24 @@
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.MenuButton?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.layout.Pane?>
 <VBox xmlns:fx="http://javafx.com/fxml" fx:id="root">
     <ToolBar>
         <Button fx:id="newGameButton">New game</Button>
         <Button fx:id="undoButton">Undo</Button>
-        <Button fx:id="difficultyButton">Difficulty</Button>
+        <MenuButton fx:id="difficultyButton" text="Difficulty">
+            <items>
+                <MenuItem fx:id="difficultyEasyButton" text="Easy" />
+                <MenuItem fx:id="difficultyMediumButton" text="Medium" />
+                <MenuItem fx:id="difficultyHardButton" text="Hard" />
+            </items>
+        </MenuButton>
         <Button fx:id="rulesButton">Rules</Button>
+        <Pane HBox.hgrow="ALWAYS"></Pane>
+        <Text fx:id="evaluations"></Text>
     </ToolBar>
     <HBox fx:id="content">
         <StackPane fx:id="board">
