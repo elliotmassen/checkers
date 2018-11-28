@@ -1,5 +1,3 @@
-package main;
-
 import java.util.ArrayList;
 import java.util.EmptyStackException;
 import java.util.Stack;
@@ -28,7 +26,7 @@ public class Controller {
     }
 
     public void setup() {
-        State initialState = StateManager.createTestState();
+        State initialState = StateManager.createInitialState();
         this._gui.setup(initialState, this);
         this._addToHistory(initialState);
         this.updateState(initialState, null, false);

@@ -1,5 +1,3 @@
-package main;
-
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
