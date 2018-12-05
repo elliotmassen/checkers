@@ -70,7 +70,7 @@ public class GUI {
             this.history.getStyleClass().add("history");
         }
 
-        this.history.getChildren().add(this.createHistoryItem(Controller.Type.INFO, "Game started!", state, controller));
+        this.history.getChildren().add(this.createHistoryItem(Controller.Type.INFO, "Game started!", state, false, controller));
 
         if(!reset) {
             this.newGameButton.setOnAction(e -> {
@@ -81,13 +81,17 @@ public class GUI {
                 if (controller.canUndo()) {
                     boolean gameOver = controller.isGameOver();
 
+                    // Undo the AI's move
+                    controller.undo(false);
+
+                    // Undo human move
                     controller.undo(true);
 
                     // If the game is over, then we've added an extra history item which will need to also go
                     if (gameOver) {
-                        this._removeHistoryItems(2);
+                        this._removeHistoryItems(3);
                     } else {
-                        this._removeHistoryItems(1);
+                        this._removeHistoryItems(2);
                     }
                 }
             });
@@ -266,7 +270,7 @@ public class GUI {
         return pieceButton;
     }
 
-    public HBox createHistoryItem(Controller.Type type, String text, State state, Controller controller) {
+    public HBox createHistoryItem(Controller.Type type, String text, State state, boolean canBeUndone, Controller controller) {
         HBox item = new HBox();
         item.getStyleClass().add("history__item");
         item.setAlignment(Pos.CENTER_LEFT);
@@ -286,7 +290,7 @@ public class GUI {
 
         item.getChildren().add(new Text(text));
 
-        if(type != Controller.Type.INFO) {
+        if(canBeUndone) {
             Pane rewindButton = new Pane();
             rewindButton.setPrefWidth(30);
             rewindButton.setPrefHeight(30);
@@ -307,14 +311,17 @@ public class GUI {
         String message = PieceState.changesToString(previousState.getPieces(), newState.getPieces());
 
         Controller.Type type;
+        Boolean canBeUndone;
         if(previousState.getTurn()) {
             type = Controller.Type.BLACK;
+            canBeUndone = true;
         }
         else {
             type = Controller.Type.RED;
+            canBeUndone = false;
         }
 
-        HBox item = this.createHistoryItem(type, message, newState, controller);
+        HBox item = this.createHistoryItem(type, message, newState, canBeUndone, controller);
         this.history.getChildren().add(item);
         item.toBack();
     }
@@ -330,7 +337,7 @@ public class GUI {
 
         message += " won the game!";
 
-        HBox gameoverItem = this.createHistoryItem(Controller.Type.INFO, message, previousState, controller);
+        HBox gameoverItem = this.createHistoryItem(Controller.Type.INFO, message, previousState, false, controller);
         this.history.getChildren().add(gameoverItem);
         gameoverItem.toBack();
     }

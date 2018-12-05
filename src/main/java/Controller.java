@@ -218,8 +218,8 @@ public class Controller {
      * @return Whether it is possible to undo an more states.
      */
     public boolean canUndo() {
-        // The history must be 2 or more, as we never want to remove the initial state
-        return this._history.size() > 1;
+        // The history must be 3 or more, as we never want to remove the initial state
+        return this._history.size() > 2;
     }
 
     /**
