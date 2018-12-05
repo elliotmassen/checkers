@@ -1,14 +1,18 @@
+import javafx.animation.FillTransition;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
+import javafx.util.Duration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,6 +35,9 @@ public class GUI {
     public MenuItem difficultyHardButton;
 
     @FXML
+    public Button hintsButton;
+
+    @FXML
     public Button rulesButton;
 
     @FXML
@@ -47,6 +54,8 @@ public class GUI {
 
     @FXML
     public VBox history;
+
+    private boolean _isShowingHints = true;
 
     private ArrayList<Circle> _options;
 
@@ -68,6 +77,7 @@ public class GUI {
             this.historyScroll.setFitToHeight(true);
             this.historyScroll.setMaxHeight(696);
             this.history.getStyleClass().add("history");
+            this.pieces.getStyleClass().add("hints");
         }
 
         this.history.getChildren().add(this.createHistoryItem(Controller.Type.INFO, "Game started!", state, false, controller));
@@ -111,6 +121,18 @@ public class GUI {
             this.difficultyHardButton.setOnAction(e -> {
                 controller.setDifficulty(2);
                 this._manageDifficultyButtons(controller);
+            });
+
+            this.hintsButton.setOnAction(e -> {
+                this._isShowingHints = !this._isShowingHints;
+                if(this._isShowingHints) {
+                    this.hintsButton.setText("Hide hints");
+                    this.pieces.getStyleClass().add("hints");
+                }
+                else {
+                    this.hintsButton.setText("Show hints");
+                    this.pieces.getStyleClass().remove("hints");
+                }
             });
 
             // Add checkers and pieces
@@ -167,6 +189,15 @@ public class GUI {
 
                 StackPane pieceButton = this.createPieceButton(s.getX(), s.getY(), s.isKing(), colour, controller);
                 this.pieces.getChildren().add(pieceButton);
+            }
+        }
+
+        for(int x = 0; x < 8; x++) {
+            for(int y = 0; y < 8; y++) {
+                if(this.pieces.lookup("#" + x + y) == null) {
+                    Circle invalidCircle = this.createInValidButton(x, y);
+                    this.pieces.getChildren().add(invalidCircle);
+                }
             }
         }
 
@@ -236,6 +267,21 @@ public class GUI {
         }));
 
         return pieceStack;
+    }
+
+    public Circle createInValidButton(int x, int y) {
+        Circle invalidCircle = new Circle();
+        invalidCircle.setRadius(34);
+        invalidCircle.setFill(Color.TRANSPARENT);
+
+        GridPane.setRowIndex(invalidCircle, x);
+        GridPane.setColumnIndex(invalidCircle, y);
+
+        invalidCircle.setOnMouseClicked((event -> {
+            this.onInValidPieceClick(invalidCircle);
+        }));
+
+        return invalidCircle;
     }
 
     public Circle createOptionButton(int x, int y, String owner, State state, State newState, Controller controller) {
@@ -351,6 +397,25 @@ public class GUI {
                 c.getStyleClass().add("option--visible");
             }
         });
+    }
+
+    public void onInValidPieceClick(Circle invalidCircle) {
+        FillTransition transition = new FillTransition(Duration.millis(300), invalidCircle, Color.TRANSPARENT, Color.rgb(255, 71, 87, 0.75));
+        transition.setAutoReverse(true);
+        transition.setCycleCount(2);
+        transition.play();
+
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setHeaderText("Invalid move");
+
+        String message = "This is not a valid move!";
+
+        if(!this._isShowingHints) {
+            message += " If you are having trouble identifying valid moves, consider showing hints. See the \"Show hints\" button in the menu.";
+        }
+
+        alert.setContentText(message);
+        alert.show();
     }
 
     public void onHistoryItemClick(MouseEvent event, State state, Controller controller) {

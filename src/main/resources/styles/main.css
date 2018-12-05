@@ -30,18 +30,21 @@
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 5, 0, 0, 3);
 }
 
-.pieces .option {
+.pieces.hints .option {
     visibility: hidden;
     -fx-stroke: rgba(255, 255, 255, 0.5);
 }
 
-.pieces .option--visible {
+.pieces.hints .option--visible {
     visibility: visible;
     -fx-cursor: hand;
 }
 
-.pieces .origin Circle {
+.pieces.hints .origin Circle {
     -fx-stroke: rgba(255, 255, 255, 0.9);
+}
+
+.pieces .origin Circle {
     -fx-cursor: hand;
 }
 

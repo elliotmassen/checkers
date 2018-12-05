@@ -21,6 +21,7 @@
                 <MenuItem fx:id="difficultyHardButton" text="Hard" />
             </items>
         </MenuButton>
+        <Button fx:id="hintsButton">Hide hints</Button>
         <Button fx:id="rulesButton">Rules</Button>
         <Pane HBox.hgrow="ALWAYS"></Pane>
         <Text fx:id="evaluations"></Text>
