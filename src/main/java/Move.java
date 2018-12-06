@@ -1,5 +1,3 @@
-import java.util.ArrayList;
-
 public class Move {
     private State _current;
     private State _next;

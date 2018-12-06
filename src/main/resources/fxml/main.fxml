@@ -1,15 +1,6 @@
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.VBox?>
-
-<?import javafx.scene.control.ToolBar?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.MenuButton?>
-<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Text?>
-<?import javafx.scene.layout.Pane?>
 <VBox xmlns:fx="http://javafx.com/fxml" fx:id="root">
     <ToolBar>
         <Button fx:id="newGameButton">New game</Button>
