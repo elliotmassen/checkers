@@ -56,22 +56,34 @@ public class GUI {
     public VBox history;
 
     private boolean _isShowingHints = true;
-
     private ArrayList<Circle> _options;
 
+    /**
+     * Removes all pieces.
+     */
     public void resetPieces() {
         this.pieces.getChildren().clear();
     }
 
+    /**
+     * Removes all item items.
+     */
     public void resetHistory() {
         this.history.getChildren().clear();
     }
 
+    /**
+     * Renders the GUI into its initial state.
+     * @param state The initial state.
+     * @param reset Whether or not this is a reset ("New game").
+     * @param controller The controller
+     */
     public void setup(State state, boolean reset, Controller controller) {
         this.resetPieces();
         this.resetHistory();
 
         if(!reset) {
+            // Add styling options
             HBox.setHgrow(this.historyScroll, Priority.ALWAYS);
             this.historyScroll.setFitToWidth(true);
             this.historyScroll.setFitToHeight(true);
@@ -80,9 +92,12 @@ public class GUI {
             this.pieces.getStyleClass().add("hints");
         }
 
+        // Add a starting history item to mark the start of the game.
         this.history.getChildren().add(this.createHistoryItem(Controller.Type.INFO, "Game started!", state, false, controller));
 
         if(!reset) {
+            // Add button click handlers
+
             this.newGameButton.setOnAction(e -> {
                 controller.setup(true);
             });
@@ -191,10 +206,17 @@ public class GUI {
         }
     }
 
+    /**
+     * Updates the GUI and renders the given state and lays out any potential following moves.
+     * @param state The state to render.
+     * @param successors Any potential following moves.
+     * @param controller The controller.
+     */
     public void render(State state, ArrayList<Move> successors, Controller controller) {
         this.resetPieces();
         this._options = new ArrayList<Circle>();
 
+        // Iterate each piece and add to board
         for(PieceState s: state.getPieces()) {
             if(s.isActive()) {
                 // Add piece button
@@ -212,6 +234,7 @@ public class GUI {
             }
         }
 
+        // Add invalid buttons to all other tiles
         for(int x = 0; x < 8; x++) {
             for(int y = 0; y < 8; y++) {
                 if(this.pieces.lookup("#" + x + y) == null) {
@@ -260,9 +283,19 @@ public class GUI {
             }
         }
 
+        // Enable/disable undo button
         this.undoButton.setDisable(!controller.canUndo());
     }
 
+    /**
+     * Creates a new piece button
+     * @param x The x location.
+     * @param y The y location.
+     * @param isKing Whether or not the piece is a king
+     * @param colour The colour of the piece.
+     * @param controller The controller.
+     * @return A stack pane that contains the piece.
+     */
     public StackPane createPieceButton(int x, int y, boolean isKing, Color colour, Controller controller) {
         StackPane pieceStack = new StackPane();
 
@@ -289,6 +322,12 @@ public class GUI {
         return pieceStack;
     }
 
+    /**
+     * Create an invalid button.
+     * @param x The x location.
+     * @param y The y location.
+     * @return A invalid button
+     */
     public Circle createInValidButton(int x, int y) {
         Circle invalidCircle = new Circle();
         invalidCircle.setRadius(34);
@@ -304,12 +343,25 @@ public class GUI {
         return invalidCircle;
     }
 
+    /**
+     * Creates an option button that the user can click to update the state.
+     * @param x The x location.
+     * @param y The y location.
+     * @param owner The ID of the original piece that will be moving.
+     * @param state The current state.
+     * @param newState The state that will be updated to.
+     * @param controller The controller.
+     * @return A option button.
+     */
     public Circle createOptionButton(int x, int y, String owner, State state, State newState, Controller controller) {
         Circle pieceButton = new Circle();
         pieceButton.setRadius(34);
         pieceButton.setFill(Color.TRANSPARENT);
         pieceButton.getStyleClass().add("option");
+
+        // Setting this allows us to show/hide paths using CSS
         pieceButton.getStyleClass().add(owner);
+
         GridPane.setRowIndex(pieceButton, x);
         GridPane.setColumnIndex(pieceButton, y);
 
@@ -320,12 +372,24 @@ public class GUI {
         return pieceButton;
     }
 
+    /**
+     * Creates an option button for intermediate parts of multi-step moves.
+     * @param x The x location.
+     * @param y The y location.
+     * @param owner The ID of the original piece that will be moving.
+     * @param restrictedMoves An array of subsequent moves that the user can make from this position.
+     * @param controller The controller.
+     * @return A option button.
+     */
     public Circle createSemiOptionButton(int x, int y, String owner, State newState, ArrayList<Move> restrictedMoves, Controller controller) {
         Circle pieceButton = new Circle();
         pieceButton.setRadius(34);
         pieceButton.setFill(Color.TRANSPARENT);
         pieceButton.getStyleClass().add("option");
+
+        // Setting this allows us to show/hide paths using CSS
         pieceButton.getStyleClass().add(owner);
+
         GridPane.setRowIndex(pieceButton, x);
         GridPane.setColumnIndex(pieceButton, y);
 
@@ -336,12 +400,22 @@ public class GUI {
         return pieceButton;
     }
 
+    /**
+     * Returns a box to be added to the history pane.
+     * @param type The type of item.
+     * @param text The message to be added to the item.
+     * @param state The state to be reverted to if canBeUndone.
+     * @param canBeUndone Whether or not to display a rewind button for this item.
+     * @param controller The controller.
+     * @return A history item.
+     */
     public HBox createHistoryItem(Controller.Type type, String text, State state, boolean canBeUndone, Controller controller) {
         HBox item = new HBox();
         item.getStyleClass().add("history__item");
         item.setAlignment(Pos.CENTER_LEFT);
 
         if(type != Controller.Type.INFO) {
+            // If it's not an info item, it's a player item
             Circle icon = new Circle();
             icon.setRadius(10);
 
@@ -357,6 +431,7 @@ public class GUI {
         item.getChildren().add(new Text(text));
 
         if(canBeUndone) {
+            // If it can be undone, then add a rewind button that rolls back the state
             Pane rewindButton = new Pane();
             rewindButton.setPrefWidth(30);
             rewindButton.setPrefHeight(30);
@@ -373,7 +448,14 @@ public class GUI {
         return item;
     }
 
+    /**
+     * Handles representing the end of a turn.
+     * @param newState The upcoming state.
+     * @param previousState The previous state.
+     * @param controller The controller.
+     */
     public void endOfTurn(State newState, State previousState, Controller controller) {
+        // Get the changes to be added to a history item
         String message = PieceState.changesToString(previousState.getPieces(), newState.getPieces());
 
         Controller.Type type;
@@ -392,6 +474,12 @@ public class GUI {
         item.toBack();
     }
 
+    /**
+     * Handles when the game is over.
+     * @param winningState The winning state.
+     * @param previousState The previous state.
+     * @param controller The controller.
+     */
     public void gameOver(State winningState, State previousState, Controller controller) {
         String message;
         if(!winningState.getTurn()) {
@@ -408,6 +496,11 @@ public class GUI {
         gameoverItem.toBack();
     }
 
+    /**
+     * Handles when a piece is clicked. Potential options will be highlighted if hint showing is enabled.
+     * @param x The x location of the clicked piece.
+     * @param y The y location of the clicked piece.
+     */
     public void onPieceClick(int x, int y) {
         this._options.forEach((Circle c) -> { c.getStyleClass().remove("option--visible"); });
 
@@ -419,12 +512,18 @@ public class GUI {
         });
     }
 
+    /**
+     * Handles when an invalid tile is clicked and displays to the user that it is invalid.
+     * @param invalidCircle The clicked circle.
+     */
     public void onInValidPieceClick(Circle invalidCircle) {
+        // Flash red
         FillTransition transition = new FillTransition(Duration.millis(300), invalidCircle, Color.TRANSPARENT, Color.rgb(255, 71, 87, 0.75));
         transition.setAutoReverse(true);
         transition.setCycleCount(2);
         transition.play();
 
+        // Display a popup error
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setHeaderText("Invalid move");
 
@@ -438,6 +537,12 @@ public class GUI {
         alert.show();
     }
 
+    /**
+     * Handles when a history rewind button is clicked. The state is reverted.
+     * @param event The click event.
+     * @param state The state to roll back to.
+     * @param controller The controller.
+     */
     public void onHistoryItemClick(MouseEvent event, State state, Controller controller) {
         if (state != null) {
             boolean gameOver = controller.isGameOver();
@@ -457,6 +562,15 @@ public class GUI {
         this.evaluations.setText("Evaluations: " + num);
     }
 
+    /**
+     * Creates a hash map that groups all potential moves (include intermediate moves) indexed by the immediate origin piece.
+     * This helps to solve the issue of overlapping intermediate multi-step moves. If multiple multi-step moves share an
+     * intermediate tile, then by indexing the map with that tile, we can get the array of restricted moves from that tile!
+     * For further information please see GUITest.java.
+     * @param moves
+     * @param previousMove
+     * @return
+     */
     public static HashMap<PieceState, ArrayList<Move>> groupBySharedPath(ArrayList<Move> moves, Move previousMove) {
         HashMap<PieceState, ArrayList<Move>> group = new HashMap<PieceState, ArrayList<Move>>();
 
@@ -497,6 +611,12 @@ public class GUI {
         return group;
     }
 
+    /**
+     * This method returns the origin piece for the given move.
+     * @param move The move to find the origin piece for.
+     * @param scene The scene.
+     * @return The origin piece.
+     */
     private PieceState _lookupOriginalPiece(Move move, Scene scene) {
         PieceState originalPiece = null;
 

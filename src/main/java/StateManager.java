@@ -21,7 +21,6 @@ public class StateManager {
     }
 
     /**
-     * create2DGrid
      * Creates a 2D integer array that represents the game state. Each tile is represented (indexed by location) as follows:
      * - 0: empty tile
      * - 1: red piece
@@ -62,6 +61,10 @@ public class StateManager {
         return grid;
     }
 
+    /**
+     * Returns the first state to be used in a game, all pieces are in there initial positions.
+     * @return The initial game state
+     */
     public static State createInitialState() {
         // TODO: Use for loops (and modulo) to reduce lines here.
         return new State(new ArrayList<PieceState>() {{
@@ -95,6 +98,10 @@ public class StateManager {
         }}, true);
     }
 
+    /**
+     * Returns a state that is useful for testing jumps.
+     * @return The test game state
+     */
     public static State createTestState() {
         return new State(new ArrayList<PieceState>() {{
             // Red pieces
@@ -127,6 +134,14 @@ public class StateManager {
         }}, true);
     }
 
+    /**
+     * Creates a new state by manipulating the given state, by changing the find piece with the replace piece.
+     * @param state The given state to manipulate.
+     * @param find A piece to be replaced.
+     * @param replace A piece to replace.
+     * @param endTurn Whether or not the turn should be ended.
+     * @return A new state.
+     */
     public static State createNewState(State state, PieceState find, PieceState replace, boolean endTurn) {
         // This is just a shallow copy, so the PieceState references will remain the same - this is good for detect
         // equality (or lack thereof)
@@ -142,6 +157,11 @@ public class StateManager {
         return new State(tempPieces, turn);
     }
 
+    /**
+     * Returns the value of a state. 1 for a human victory, -1 for an AI victory and 0 for all else.
+     * @param state The state to value.
+     * @return An integer representing the state value.
+     */
     public static int getStateValue(State state) {
         int value = 0;
 

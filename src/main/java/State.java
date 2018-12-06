@@ -1,3 +1,5 @@
+import com.sun.istack.internal.Nullable;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -23,7 +25,6 @@ public class State {
     }
 
     /**
-     * getSuccessors
      * This method returns a list of Moves. Each move contains a current and next state, as well as a potential
      * following move (for jumps).
      * @return A list of Moves.
@@ -62,6 +63,12 @@ public class State {
         return moves;
     }
 
+    /**
+     * Determines whether the state is a goal state or not.
+     * @param turn
+     * @param successors Any potential successor states.
+     * @return Boolean, whether it is a goal state or not.
+     */
     public boolean isGoalState(boolean turn, ArrayList<Move> successors) {
         // The opponent has no active pieces
         boolean opponentHasActivePieces = false;
@@ -81,8 +88,13 @@ public class State {
         return !opponentHasActivePieces || numberOfSuccessorStates < 1;
     }
 
-    // TODO: The fact this function needs to exist may mean my state representation isn't efficient, although this should
-    // be weighted against the lesser complexity of the isGoalState method.
+
+    /**
+     * As the state representation isn't indexed by location, this method exists to do just that.
+     * @param x
+     * @param y
+     * @return The found piece, or null if not found.
+     */
     public PieceState getPieceByLocation(int x, int y) {
         PieceState found = null;
 
@@ -96,7 +108,16 @@ public class State {
         return found;
     }
 
-    private ArrayList<Move> _detectJumps(State state, PieceState piece, Move previousMove, boolean overrideTurn, int[][] grid) {
+    /**
+     * Finds any potential jump moves for the given piece and the given state.
+     * @param state The state representation.
+     * @param piece The piece to detect jumps for.
+     * @param previousMove Optional previous move to connect multi-step jumps.
+     * @param overrideTurn The turn of the original state.
+     * @param grid Optional 2d grid of the board, this will be generated if null
+     * @return An array of potential jump moves.
+     */
+    private ArrayList<Move> _detectJumps(State state, PieceState piece, @Nullable Move previousMove, boolean overrideTurn, @Nullable int[][] grid) {
         ArrayList<Move> moves = new ArrayList<Move>();
 
         // If there is no grid (eg. this is the initial call) then create it
@@ -119,7 +140,18 @@ public class State {
         return moves;
     }
 
-    private ArrayList<Move> _detectJumpInDirection(int xChange, int yChange, State state, PieceState piece, Move previousMove, boolean overrideTurn, int[][] grid) {
+    /**
+     * Finds any potential jumps for the given piece and given state in a given direction (decided by xChange and yChange).
+     * @param xChange The change in the x direction.
+     * @param yChange The change in the y direction.
+     * @param state The state representation.
+     * @param piece The piece to detect jumps for.
+     * @param previousMove Optional previous move to connect multi-step jumps.
+     * @param overrideTurn The turn of the original state.
+     * @param grid 2d grid of the board, this will be generated if null
+     * @return An array of potential jump moves.
+     */
+    private ArrayList<Move> _detectJumpInDirection(int xChange, int yChange, State state, PieceState piece, @Nullable Move previousMove, boolean overrideTurn, int[][] grid) {
         ArrayList<Move> moves = new ArrayList<Move>();
         HashSet<Integer> enemies = new HashSet<Integer>();
 
@@ -176,6 +208,13 @@ public class State {
         return moves;
     }
 
+    /**
+     * Finds any potential regular moves for the given piece and the given state.
+     * @param state The state representation.
+     * @param piece The piece to detect jumps for.
+     * @param grid 2d grid of the board
+     * @return An array of potential jump moves.
+     */
     private ArrayList<Move> _detectMoves(State state, PieceState piece, int[][] grid) {
         ArrayList<Move> moves = new ArrayList<Move>();
 
@@ -194,7 +233,15 @@ public class State {
         return moves;
     }
 
-    // An array list is used (even though it'll only be a singular move) to avoid having to do null checking
+    /**
+     * Finds any potential regular moves for the given piece and given state in a given direction (decided by xChange and yChange).
+     * @param xChange The change in the x direction.
+     * @param yChange The change in the y direction.
+     * @param state The state representation.
+     * @param piece The piece to detect jumps for.e.
+     * @param grid 2d grid of the board
+     * @return An array of potential jump moves, however the size will only ever be 0 or 1. The reason for using an array is to avoid null checking.
+     */
     private ArrayList<Move> _detectMoveInDirection(int xChange, int yChange, State state, PieceState piece, int[][] grid) {
         ArrayList<Move> moves = new ArrayList<Move>();
 
@@ -217,6 +264,11 @@ public class State {
         return moves;
     }
 
+    /**
+     * Returns the intermediate direction change. Eg. when x is 2, this returns 1. When x is -2, this returns -1.
+     * @param x
+     * @return The intermediate direction change.
+     */
     private static int _computeInBetweenChange(int x) {
         return x + (-1 * (int) Math.signum(x));
     }
