@@ -135,6 +135,26 @@ public class GUI {
                 }
             });
 
+            this.rulesButton.setOnAction(e -> {
+                Alert rulesAlert = new Alert(Alert.AlertType.INFORMATION);
+                rulesAlert.setHeaderText("Rules");
+
+                VBox rulesBox = new VBox();
+                rulesBox.getChildren().add(new Text("\t- Black always plays first."));
+                rulesBox.getChildren().add(new Text("\t- Regular pieces can only move forward."));
+                rulesBox.getChildren().add(new Text("\t- Pieces only ever more diagonally."));
+                rulesBox.getChildren().add(new Text("\t- A regular piece becomes a king when they reach the end of the board."));
+                rulesBox.getChildren().add(new Text("\t- A king piece can move forward or backwards."));
+                rulesBox.getChildren().add(new Text("\t- A regular move is a movement of a piece into an adjacent empty cell."));
+                rulesBox.getChildren().add(new Text("\t- A capturing move is a jump, where there is an adjacent enemy piece with an empty tile behind it."));
+                rulesBox.getChildren().add(new Text("\t- A capturing move may to multiple other capturing moves within the same turn."));
+                rulesBox.getChildren().add(new Text("\t- If capturing moves exist, the player must make a capturing move. This is called a forced capture."));
+                rulesBox.getChildren().add(new Text("\t- The game is won when one player captures all enemy pieces, or when the enemy can not move any remaining pieces."));
+
+                rulesAlert.getDialogPane().setContent(rulesBox);
+                rulesAlert.showAndWait();
+            });
+
             // Add checkers and pieces
             this.pieces.getStyleClass().add("pieces");
             this.pieces.setHgap(17);
